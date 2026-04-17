@@ -1,11 +1,8 @@
 package org.acme.application.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
-public class RegisterUserDto {
+public class CreateUserDto {
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
     private String name;
@@ -26,6 +23,10 @@ public class RegisterUserDto {
             message = "La contraseña debe contener al menos una minúscula, una mayúscula y un número"
     )
     private String password;
+
+    @NotNull(message = "El rol es obligatorio")
+    @Min(value = 1, message = "El rol debe ser válido")
+    private Byte roleId;
 
     public String getName() {
         return name;
@@ -57,5 +58,13 @@ public class RegisterUserDto {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Byte getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Byte roleId) {
+        this.roleId = roleId;
     }
 }
