@@ -12,7 +12,6 @@ public class RoleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)   //le decimos a la base de datos que se encargue de generar el id, en este caso un byte autoincremental
-    @JdbcTypeCode(SqlTypes.CHAR)
     private Byte id;
 
     @Column(name = "name", nullable = false, length = 255)
