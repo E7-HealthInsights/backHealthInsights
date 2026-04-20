@@ -29,9 +29,9 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String path=requestContext.getUriInfo().getPath();
         System.out.println("Path: "+path);
-        if (path.equals("/users")){
-            return;   //si la ruta es /users, no se requiere autenticación (registro de usuario)
-        }
+//        if (path.equals("/users")){
+//            return;   //si la ruta es /users, no se requiere autenticación (registro de usuario)
+//        }
 
         if(path.startsWith("/q/")){
             return;
