@@ -6,6 +6,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.acme.application.dto.UserResponseDto;
 import org.acme.domain.models.User;
 import org.acme.infrastructure.security.AuthContext;
 
@@ -20,6 +21,15 @@ public class AuthResource {
     @Path("/me")
     public Response me() {
         User user = authContext.getUser();
-        return Response.ok(user).build();
+
+        UserResponseDto dto = new UserResponseDto();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole().getName()); // "ADMIN", "DIRECTOR_FINANZAS", etc
+        dto.setStatus(user.isStatus());
+
+        return Response.ok(dto).build();
     }
 }
