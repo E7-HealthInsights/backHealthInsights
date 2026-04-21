@@ -11,6 +11,9 @@ import jakarta.ws.rs.core.Response;
 import org.acme.application.dto.CreateUserDto;
 import org.acme.application.usecase.CreateUserUseCase;
 import org.acme.infrastructure.security.AuthContext;
+import org.acme.domain.exception.EmailAlreadyExistsException;
+import org.acme.domain.exception.RoleNotFoundException;
+import org.acme.application.dto.ErrorResponseDto;
 
 @Path("/users")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -27,11 +30,26 @@ public class UserResource {
     }
 
     @POST
-    public Response createUser(@Valid CreateUserDto createUserDto){
-        try{
-            return Response.ok(createUserUseCase.execute(createUserDto)).build();
-        } catch (Exception e){
-            return Response.serverError().entity(e.getMessage()).build();
+    public Response createUser(@Valid CreateUserDto createUserDto) {
+        try {
+            return Response.status(Response.Status.CREATED)
+                    .entity(createUserUseCase.execute(createUserDto))
+                    .build();
+
+        } catch (EmailAlreadyExistsException e) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(new ErrorResponseDto(e.getMessage()))
+                    .build();
+
+        } catch (RoleNotFoundException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponseDto(e.getMessage()))
+                    .build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponseDto("Error interno del servidor"))
+                    .build();
         }
     }
 

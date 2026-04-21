@@ -33,4 +33,8 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase
 
     private User map(UserEntity userEntity) { return UserMapper.toDomain(userEntity); }
 
+    @Override
+    public boolean existsByEmail(String email) {
+        return find("email", email).firstResultOptional().isPresent();
+    }
 }
