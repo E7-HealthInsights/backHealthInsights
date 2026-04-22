@@ -37,6 +37,10 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
             return;
         }
 
+        if (requestContext.getMethod().equalsIgnoreCase("OPTIONS")) {
+            return;
+        }
+
         String authHeader = requestContext.getHeaders().getFirst("Authorization");   //se obtiene el header de autorización de la solicitud
 
         if(authHeader == null){
