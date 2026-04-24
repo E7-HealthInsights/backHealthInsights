@@ -6,6 +6,7 @@ import org.acme.application.dto.UserResponseDto;
 import org.acme.domain.models.User;
 import org.acme.domain.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,21 +20,7 @@ public class GetUsersUseCase {
         this.userRepository = userRepository;
     }
 
-    public List<UserResponseDto> execute() {
-        return userRepository.findAllUsers()
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
-
-    private UserResponseDto toDto(User user) {
-        UserResponseDto dto = new UserResponseDto();
-        dto.setId(user.getId());
-        dto.setName(user.getName());
-        dto.setLastName(user.getLastName());
-        dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole().getName());
-        dto.setStatus(user.isStatus());
-        return dto;
+    public ArrayList<User> execute() {
+        return this.userRepository.findAllUsers();
     }
 }

@@ -2,12 +2,15 @@ package org.acme.infrastructure.repository;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.acme.domain.models.User;
 import org.acme.domain.repository.UserRepository;
 import org.acme.infrastructure.entities.UserEntity;
 import org.acme.infrastructure.mapper.UserMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,6 +18,9 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase<UserEntity, UUID> {
+
+    @Inject
+    EntityManager em;
 
     @Override
     @Transactional
@@ -41,12 +47,13 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase
     }
 
     @Override
-    public List<User> findAllUsers() {
-        return findAll()
-                .withHint("jakarta.persistence.loadgraph", getEntityManager().getEntityGraph("User.full"))
-                .list()
-                .stream()
-                .map(this::map)
-                .collect(Collectors.toList());
+    public ArrayList<User> findAllUsers() {
+        List<UserEntity> entities = em.createQuery("SELECT u FROM UserEntity u", UserEntity.class)
+                .setHint("jakarta.persistence.fetchgraph", em.getEntityGraph("User.full"))
+                .getResultList();
+
+        return entities.stream()
+                .map(UserMapper::toDomain)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }
