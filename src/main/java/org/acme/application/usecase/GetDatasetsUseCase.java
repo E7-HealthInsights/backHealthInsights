@@ -19,21 +19,8 @@ public class GetDatasetsUseCase {
         this.datasetRepository = datasetRepository;
     }
 
-    public List<DatasetResponseDto> execute() {
-        return datasetRepository.findAllActive()
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+    public List<Dataset> execute() {
+        return datasetRepository.findAllActive();
     }
 
-    private DatasetResponseDto toDto(Dataset dataset) {
-        DatasetResponseDto dto = new DatasetResponseDto();
-        dto.setId(dataset.getId());
-        dto.setNombre(dataset.getNombre());
-        dto.setDescripcion(dataset.getDescripcion());
-        dto.setFuente(dataset.getFuente());
-        dto.setLink(dataset.getLink());
-        dto.setFechaActualizacion(dataset.getFechaActualizacion());
-        return dto;
-    }
 }

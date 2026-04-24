@@ -27,25 +27,14 @@ public class GetMetricasByDatasetUseCase {
     /**
      * @throws jakarta.ws.rs.NotFoundException si el dataset no existe o está inactivo
      */
-    public List<MetricaResponseDto> execute(UUID datasetId) {
+    public List<Metrica> execute(UUID datasetId) {
         // Valida que el dataset exista y esté activo antes de devolver métricas
         datasetRepository.findDatasetById(datasetId)
                 .filter(d -> d.isEstado())
                 .orElseThrow(() -> new jakarta.ws.rs.NotFoundException(
                         "Dataset no encontrado: " + datasetId));
 
-        return metricaRepository.findByDatasetId(datasetId)
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+        return metricaRepository.findByDatasetId(datasetId);
     }
 
-    private MetricaResponseDto toDto(Metrica metrica) {
-        MetricaResponseDto dto = new MetricaResponseDto();
-        dto.setId(metrica.getId());
-        dto.setNombre(metrica.getNombre());
-        dto.setColumnaCsv(metrica.getColumnaCsv());
-        dto.setUnidad(metrica.getUnidad());
-        return dto;
-    }
 }
