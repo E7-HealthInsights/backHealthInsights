@@ -8,8 +8,10 @@ import org.acme.domain.repository.UserRepository;
 import org.acme.infrastructure.entities.UserEntity;
 import org.acme.infrastructure.mapper.UserMapper;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase<UserEntity, UUID> {
@@ -36,5 +38,15 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase
     @Override
     public boolean existsByEmail(String email) {
         return find("email", email).firstResultOptional().isPresent();
+    }
+
+    @Override
+    public List<User> findAllUsers() {
+        return findAll()
+                .withHint("jakarta.persistence.loadgraph", getEntityManager().getEntityGraph("User.full"))
+                .list()
+                .stream()
+                .map(this::map)
+                .collect(Collectors.toList());
     }
 }
