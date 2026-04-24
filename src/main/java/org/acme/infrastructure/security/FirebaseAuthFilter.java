@@ -3,6 +3,7 @@ package org.acme.infrastructure.security;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import io.quarkus.security.identity.CurrentIdentityAssociation;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Priorities;
@@ -24,6 +25,8 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
     UserRepository userRepository;
     @Inject
     AuthContext authContext;
+    @Inject
+    CurrentIdentityAssociation identityAssociation;
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -59,12 +62,18 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token, true);
             // firebase dice: token valido, usuario real
             Optional<User> userOptional = userRepository.findByFirebaseUuid(decodedToken.getUid());  //se busca el usuario en la base de datos usando el UUID de Firebase
-            if(userOptional.isEmpty()){
+            if(userOptional.isEmpty()) {
                 requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("No autorizado").build());
                 return;  //si no se encuentra el usuario en la base de datos, se aborta la solicitud con un error
             }
+
             User user = userOptional.get();
             authContext.setUser(user);
+
+            //security context
+            requestContext.setSecurityContext(new FirebaseSecurityContext(user));
+
+
             //si se encuentra el usuario, se establece en el contexto de autenticación para que esté disponible en los recursos protegidos
         } catch (FirebaseAuthException e){
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("No autorizado").build());
