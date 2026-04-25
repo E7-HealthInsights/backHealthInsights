@@ -1,5 +1,6 @@
 package org.acme.interfaces.rest;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -19,6 +20,7 @@ public class AuthResource {
 
     @GET
     @Path("/me")
+    @RolesAllowed({"ADMIN", "DIRECTOR_GENERAL", "DIRECTOR_FINANZAS", "DIRECTOR_MERCADOTECNIA"})
     public Response me() {
         User user = authContext.getUser();
 
