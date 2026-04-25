@@ -67,7 +67,9 @@ public class UserResource {
     @GET
     @RolesAllowed("ADMIN")
     public Response listUsers(){
+
         ArrayList<User> users = getUsersUseCase.execute();
+        System.out.println("Rol del usuario: " + authContext.getUser().getRole().getName());
 
         List<UserResponseDto> response = users.stream().map(user -> {
             UserResponseDto dto = new UserResponseDto();
@@ -81,6 +83,7 @@ public class UserResource {
         }).toList();
 
         return Response.ok(response).build();
+
     }
 
 }

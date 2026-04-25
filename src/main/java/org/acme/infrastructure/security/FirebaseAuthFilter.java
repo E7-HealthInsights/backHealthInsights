@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import io.quarkus.security.identity.CurrentIdentityAssociation;
+import io.smallrye.mutiny.Uni;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Priorities;
@@ -71,7 +72,9 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
             authContext.setUser(user);
 
             //security context
-            requestContext.setSecurityContext(new FirebaseSecurityContext(user));
+            //requestContext.setSecurityContext(new FirebaseSecurityContext(user));
+
+            identityAssociation.setIdentity(Uni.createFrom().item(new FirebaseSecurityIdentity(user)));
 
 
             //si se encuentra el usuario, se establece en el contexto de autenticación para que esté disponible en los recursos protegidos
