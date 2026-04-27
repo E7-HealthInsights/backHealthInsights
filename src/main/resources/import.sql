@@ -51,6 +51,9 @@ VALUES ('08631269-3f4c-4299-a1e7-23f5684e1091', 'Santiago', 'Niño', 'santiago.n
 INSERT INTO Users (id, name, last_name, email, role_id, status, provider_id)
 VALUES ('b2d4f8a1-6c3e-4f2a-9d5b-7e8c1a0f3d42', 'Gabriel', 'Gutiérrez', 'gabogg2004@gmail.com', 2, true, '855m35Eei6Zla4ewGGbQkLTRHow1');
 
+INSERT INTO Users (id, name, last_name, email, role_id, status, provider_id)
+VALUES ('c3e5f9b2-7d4f-5a3b-ae6c-8f9d2b1e4c53', 'Admin', 'Admin', 'admin@gmail.com', 1, true, 'JWYXnZE8uAckSn67K8QhXa7PvA92');
+
 -- ── Datasets de prueba ────────────────────────────────────────────────────────
 
 INSERT INTO Dataset (id, nombre, nombre_tabla, descripcion, fuente, estado, fecha_actualizacion) VALUES
