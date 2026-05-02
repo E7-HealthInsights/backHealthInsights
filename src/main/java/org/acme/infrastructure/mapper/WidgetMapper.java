@@ -12,6 +12,7 @@ public class WidgetMapper {
         widget.setTitulo(entity.getTitulo());
         widget.setQuery(entity.getQuery());
         widget.setOrden(entity.getOrden());
+        widget.setRolId(entity.getRolId());
 
         if(entity.getTipo() != null && Hibernate.isInitialized(entity.getTipo())){
             widget.setTipo(TipoWidgetMapper.toDomain(entity.getTipo()));
@@ -29,15 +30,9 @@ public class WidgetMapper {
         entity.setTitulo(widget.getTitulo());
         entity.setQuery(widget.getQuery());
         entity.setOrden(widget.getOrden());
-
-        if (widget.getUsuario() != null) {
-            entity.setUsuario(UserMapper.toEntity(widget.getUsuario()));
-        }
-
-        if (widget.getTipo() != null) {
-            entity.setTipo(TipoWidgetMapper.toEntity(widget.getTipo()));
-        }
-
+        entity.setTipo(widget.getTipo() != null ? TipoWidgetMapper.toEntity(widget.getTipo()) : null);
+        entity.setUsuario(widget.getUsuario() != null ? UserMapper.toEntity(widget.getUsuario()) : null);
+        entity.setRolId(widget.getRolId());
         return entity;
     }
 

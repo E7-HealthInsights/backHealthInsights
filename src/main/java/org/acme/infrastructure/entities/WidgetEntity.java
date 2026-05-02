@@ -38,13 +38,16 @@ public class WidgetEntity {
     @Column(name = "title", nullable = false, length = 100)
     private String titulo;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "usuario_id", nullable = true)
     private UserEntity usuario;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tipo_id", nullable = false)
     private TipoWidgetEntity tipo;
+
+    @Column(name = "rol_id", nullable = true)
+    private Byte rolId;
 
     @Column(name = "query", nullable = false, columnDefinition = "TEXT")
     private String query;   // JSON config guardado como String
@@ -98,5 +101,13 @@ public class WidgetEntity {
 
     public void setOrden(int orden) {
         this.orden = orden;
+    }
+
+    public Byte getRolId() {
+        return rolId;
+    }
+    
+    public void setRolId(Byte rolId) {
+        this.rolId = rolId;
     }
 }

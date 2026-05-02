@@ -36,6 +36,28 @@ CREATE TABLE Metrica (
                          FOREIGN KEY (dataset_id) REFERENCES Dataset(id)
 );
 
+-- Tabla Tipo de Grafica
+CREATE TABLE Tipo_de_Grafica (
+                                 id TINYINT AUTO_INCREMENT PRIMARY KEY,
+                                 nombre VARCHAR(100)
+);
+
+-- Tabla Widget
+CREATE TABLE Widget (
+                        id VARCHAR(36) PRIMARY KEY,
+                        title VARCHAR(100),
+                        usuario_id VARCHAR(36) NULL,
+                        rol_id TINYINT NULL,
+                        tipo_id TINYINT,
+                        query text,
+                        orden int,
+
+                        FOREIGN KEY (usuario_id) REFERENCES Users(id),
+                        FOREIGN KEY (rol_id) REFERENCES Role(id),
+                        FOREIGN KEY (tipo_id) REFERENCES Tipo_de_Grafica(id)
+);
+
+
 -- ── Roles ─────────────────────────────────────────────────────────────────────
 
 INSERT INTO Role VALUES (1, 'ADMIN');
@@ -53,6 +75,9 @@ VALUES ('b2d4f8a1-6c3e-4f2a-9d5b-7e8c1a0f3d42', 'Gabriel', 'Gutiérrez', 'gabogg
 
 INSERT INTO Users (id, name, last_name, email, role_id, status, provider_id)
 VALUES ('c3e5f9b2-7d4f-5a3b-ae6c-8f9d2b1e4c53', 'Admin', 'Admin', 'admin@gmail.com', 1, true, 'JWYXnZE8uAckSn67K8QhXa7PvA92');
+
+INSERT INTO Users (id, name, last_name, email, role_id, status, provider_id)
+VALUES ('84f3167c-7088-4d63-8f8f-bedc1f95e080', 'Alejandra', 'Finanzas', 'alejandra@example.com', 3, true, 'SfqxwVKxPmdGyNE2ekhX9SAKWg82');
 
 -- ── Datasets de prueba ────────────────────────────────────────────────────────
 
@@ -91,3 +116,32 @@ INSERT INTO Metrica (id, nombre, columna_csv, unidad, dataset_id) VALUES
                                                                       ('33000000-0000-0000-0000-000000000004', 'Población',    'poblacion',    NULL, 'e3000000-0000-0000-0000-000000000003'),
                                                                       ('33000000-0000-0000-0000-000000000005', 'Porcentaje',   'porcentaje',   '%',  'e3000000-0000-0000-0000-000000000003'),
                                                                       ('33000000-0000-0000-0000-000000000006', 'Sexo',         'sexo',         NULL, 'e3000000-0000-0000-0000-000000000003');
+
+
+-- Tipos de gráfica
+INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (1, 'STAT');
+INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (2, 'LINE');
+INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (3, 'BAR');
+INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (4, 'PIE');
+INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (5, 'TABLE');
+
+-- ================================================
+-- WIDGETS DEFAULT DIRECTOR FINANZAS (usuario_id = '3')
+-- ================================================
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+    (UUID(), 'Gasto salud % PIB por año', NULL,
+     2,
+     'SELECT time_period, obs_value FROM worldbank_health_expenditure ORDER BY time_period', 1, 3);
+
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+    (UUID(), 'Gasto per cápita diabetes USD', NULL,
+     1,
+     'SELECT expenditure_per_person_usd FROM idf_diabetes_atlas WHERE country_region = ''Mexico'' AND years = 2024', 2, 3);
+
+ INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+     (UUID(), 'Cobertura pública vs privada', NULL, 4,
+      'SELECT insurance_type, AVG(obs_value) FROM oecd_healthcare_coverage WHERE unit_measure = ''PT_POP'' GROUP BY insurance_type', 3, 3);
+
+ INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+     (UUID(), 'Evolución gasto OCDE', '84f3167c-7088-4d63-8f8f-bedc1f95e080', 2,
+      'SELECT time_period, obs_value FROM oecd_health_expenditure ORDER BY time_period', 4, NULL);

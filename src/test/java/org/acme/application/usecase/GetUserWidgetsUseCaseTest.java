@@ -41,12 +41,12 @@ class GetUserWidgetsUseCaseTest {
 
         TipoWidget tipo = new TipoWidget((byte) 1, "STAT");
 
-        Widget w1 = new Widget(UUID.randomUUID(), "Widget 1", authenticatedUser, tipo, "SELECT COUNT(*) FROM ihme_gbd", 1);
-        Widget w2 = new Widget(UUID.randomUUID(), "Widget 2", authenticatedUser, tipo, "SELECT SUM(detecciones) FROM imss_deteccion_diabetes", 2);
+        Widget w1 = new Widget(UUID.randomUUID(), "Widget 1", authenticatedUser, tipo, "SELECT COUNT(*) FROM ihme_gbd", 1, null);
+        Widget w2 = new Widget(UUID.randomUUID(), "Widget 2", authenticatedUser, tipo, "SELECT SUM(detecciones) FROM imss_deteccion_diabetes", 2, null);
 
         when(widgetRepository.findByUserId(userId)).thenReturn(List.of(w1, w2));
 
-        List<Widget> result = useCase.execute(userId);
+        List<Widget> result = useCase.execute();
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -60,7 +60,7 @@ class GetUserWidgetsUseCaseTest {
         UUID userId = authenticatedUser.getId();
         when(widgetRepository.findByUserId(userId)).thenReturn(List.of());
 
-        List<Widget> result = useCase.execute(userId);
+        List<Widget> result = useCase.execute();
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -74,10 +74,10 @@ class GetUserWidgetsUseCaseTest {
 
         when(widgetRepository.findByUserId(userId)).thenReturn(List.of());
         when(widgetRepository.findByUserId(otroUserId)).thenReturn(List.of(
-                new Widget(UUID.randomUUID(), "Widget ajeno", null, null, "query", 1)
+                new Widget(UUID.randomUUID(), "Widget ajeno", null, null, "query", 1, null)
         ));
 
-        List<Widget> result = useCase.execute(userId);
+        List<Widget> result = useCase.execute();
 
         assertTrue(result.isEmpty());
         verify(widgetRepository, never()).findByUserId(otroUserId);  // nunca consulta por otro usuario

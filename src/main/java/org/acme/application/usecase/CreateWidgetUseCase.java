@@ -23,7 +23,7 @@ public class CreateWidgetUseCase {
         this.authContext = authContext;
     }
 
-    public Widget execute(CreateWidgetDto dto, User userAuth){
+    public Widget execute(CreateWidgetDto dto){
         TipoWidget tipoWidget = new TipoWidget();
         tipoWidget.setId(dto.getTipoId());
 
@@ -32,8 +32,9 @@ public class CreateWidgetUseCase {
         widget.setTitulo(dto.getTitulo());
         widget.setQuery(dto.getQueryConfig());  //ahorita como string
         widget.setOrden(dto.getOrden());
-        widget.setUsuario(userAuth);
+        widget.setUsuario(authContext.getUser());
         widget.setTipo(tipoWidget);
+        widget.setRolId(null);   //pues es personalizado, no asociado al rol
 
         return widgetRepository.create(widget);
     }
