@@ -9,17 +9,19 @@ public class Widget {
     private TipoWidget tipo;
     private String query;   // JSON config guardado como String
     private int orden;
+    private Byte rolId;
 
     public Widget() {
     }
 
-    public Widget(UUID id, String titulo, User usuario, TipoWidget tipo, String query, int orden) {
+    public Widget(UUID id, String titulo, User usuario, TipoWidget tipo, String query, int orden, Byte rolId) {
         this.id = id;
         this.titulo = titulo;
         this.usuario = usuario;
         this.tipo = tipo;
         this.query = query;
         this.orden = orden;
+        this.rolId = rolId;
     }
 
     public UUID getId() {
@@ -68,5 +70,13 @@ public class Widget {
 
     public void setOrden(int orden) {
         this.orden = orden;
+    }
+
+    public Byte getRolId() {
+        return rolId;
+    }
+
+    public void setRolId(Byte rolId) {
+        this.rolId = rolId;
     }
 }

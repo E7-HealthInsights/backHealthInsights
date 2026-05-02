@@ -10,6 +10,7 @@ import org.acme.domain.repository.WidgetRepository;
 import org.acme.infrastructure.entities.WidgetEntity;
 import org.acme.infrastructure.mapper.WidgetMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,9 +32,26 @@ public class WidgetRepositoryImpl implements WidgetRepository, PanacheRepository
 
     @Override
     public List<Widget> findByUserId(UUID userId){
-        return find("usuario.id", userId)
-                .withHint("jakarta.persistence.fetchgraph", em.getEntityGraph("Widget.withTipo"))
-                .list().stream().map(WidgetMapper::toDomain).collect(Collectors.toList());
+        List<WidgetEntity> entities = em.createQuery(
+                "SELECT w FROM WidgetEntity w WHERE w.usuario.id = :userId",
+                WidgetEntity.class
+        )
+                .setParameter("userId", userId)
+                .setHint("jakarta.persistence.fetchgraph", em.getEntityGraph("Widget.withTipo"))
+                .getResultList();
+        return entities.stream().map(WidgetMapper::toDomain).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public List<Widget> findDefaultsByRolId(Byte rolId) {
+        List<WidgetEntity> entities = em.createQuery(
+                        "SELECT w FROM WidgetEntity w WHERE w.rolId = :rolId",
+                        WidgetEntity.class
+                )
+                .setParameter("rolId", rolId)
+                .setHint("jakarta.persistence.fetchgraph", em.getEntityGraph("Widget.withTipo"))
+                .getResultList();
+        return entities.stream().map(WidgetMapper::toDomain).collect(Collectors.toCollection(ArrayList::new));
     }
 
 }

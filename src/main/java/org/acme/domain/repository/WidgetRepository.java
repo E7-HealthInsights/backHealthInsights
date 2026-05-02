@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface WidgetRepository {
     Widget create(Widget widget);
     List<Widget> findByUserId(UUID userId);
+    List<Widget> findDefaultsByRolId(Byte rolId);
 }
