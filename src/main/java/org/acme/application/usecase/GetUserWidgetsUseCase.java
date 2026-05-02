@@ -2,10 +2,12 @@ package org.acme.application.usecase;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.acme.domain.models.User;
 import org.acme.domain.models.Widget;
 import org.acme.domain.repository.WidgetRepository;
 import org.acme.infrastructure.security.AuthContext;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +23,10 @@ public class GetUserWidgetsUseCase {
         this.authContext = authContext;
     }
 
-    public List<Widget> execute(UUID userId){
-        return widgetRepository.findByUserId(userId);
+    public List<Widget> execute() {
+        List<Widget> todos = new ArrayList<>();
+        todos.addAll(widgetRepository.findDefaultsByRolId(authContext.getUser().getRole().getId()));
+        todos.addAll(widgetRepository.findByUserId(authContext.getUser().getId()));
+        return todos;
     }
 }
