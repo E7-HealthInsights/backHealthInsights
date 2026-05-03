@@ -47,7 +47,7 @@ class CreateWidgetUseCaseTest {
         dto.setQueryConfig("SELECT SUM(detecciones) FROM imss_deteccion_diabetes WHERE ano = 2023");
         dto.setOrden(1);
 
-        Widget result = useCase.execute(dto, authContext.getUser());
+        Widget result = useCase.execute(dto);
 
         assertNotNull(result);
         assertEquals("Total detecciones 2023", result.getTitulo());
@@ -66,8 +66,8 @@ class CreateWidgetUseCaseTest {
         dto.setQueryConfig("SELECT COUNT(*) FROM inegi_defunciones");
         dto.setOrden(1);
 
-        Widget w1 = useCase.execute(dto, authContext.getUser());
-        Widget w2 = useCase.execute(dto, authContext.getUser());
+        Widget w1 = useCase.execute(dto);
+        Widget w2 = useCase.execute(dto);
 
         assertNotEquals(w1.getId(), w2.getId()); // cada widget tiene su propio UUID
     }
