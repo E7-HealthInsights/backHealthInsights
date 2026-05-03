@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface MetricaRepository {
     List<Metrica> findByDatasetId(UUID datasetId);
+    void saveAll(List<Metrica> metricas);
 }
