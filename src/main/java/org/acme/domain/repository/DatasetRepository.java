@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface DatasetRepository {
     List<Dataset> findAllActive();
     Optional<Dataset> findDatasetById(UUID id);
+    Dataset save(Dataset dataset);
+    boolean existsByNombreTabla(String nombreTabla);
 }

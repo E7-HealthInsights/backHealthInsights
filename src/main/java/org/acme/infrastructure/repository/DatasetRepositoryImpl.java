@@ -28,4 +28,16 @@ public class DatasetRepositoryImpl implements DatasetRepository, PanacheReposito
     public Optional<Dataset> findDatasetById(UUID id) {
         return findByIdOptional(id).map(DatasetMapper::toDomain);
     }
+
+    @Override
+    public Dataset save(Dataset dataset) {
+        DatasetEntity entity = DatasetMapper.toEntity(dataset);
+        persist(entity);
+        return DatasetMapper.toDomain(entity);
+    }
+
+    @Override
+    public boolean existsByNombreTabla(String nombreTabla) {
+        return count("nombreTabla", nombreTabla) > 0;
+    }
 }

@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.acme.domain.models.Metrica;
 import org.acme.domain.repository.MetricaRepository;
+import org.acme.infrastructure.entities.DatasetEntity;
 import org.acme.infrastructure.entities.MetricaEntity;
 import org.acme.infrastructure.mapper.MetricaMapper;
 
@@ -21,5 +22,23 @@ public class MetricaRepositoryImpl implements MetricaRepository, PanacheReposito
                 .stream()
                 .map(MetricaMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void saveAll(List<Metrica> metricas) {
+        metricas.forEach(m -> {
+            MetricaEntity entity = new MetricaEntity();
+            entity.setId(m.getId());
+            entity.setNombre(m.getNombre());
+            entity.setColumnaCsv(m.getColumnaCsv());
+            entity.setUnidad(m.getUnidad());
+
+            // getReference devuelve el proxy que Hibernate ya tiene en su contexto,
+            // evitando el error de "unsaved transient entity"
+            DatasetEntity datasetRef = getEntityManager().getReference(DatasetEntity.class, m.getDatasetId());
+            entity.setDataset(datasetRef);
+
+            persist(entity);
+        });
     }
 }
