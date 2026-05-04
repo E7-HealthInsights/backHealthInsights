@@ -141,12 +141,15 @@ public class CsvIngestService {
 
                 for (int i = 0; i < columnas.size(); i++) {
                     String rawValue = i < values.size() ? values.get(i) : null;
-                    // Si está vacío lo guardamos como NULL
                     if (rawValue == null || rawValue.isBlank()) {
                         ps.setNull(i + 1, java.sql.Types.NULL);
                     } else {
-                        ps.setString(i + 1, rawValue);
-                        // MySQL/JDBC convierte el string al tipo destino de la columna
+                        String cleanValue = cleanValue(rawValue, columnas.get(i).getSqlType());
+                        if (cleanValue == null) {
+                            ps.setNull(i + 1, java.sql.Types.NULL);
+                        } else {
+                            ps.setString(i + 1, cleanValue);
+                        }
                     }
                 }
 
@@ -218,13 +221,44 @@ public class CsvIngestService {
     }
 
     /**
-     * Genera un nombre de columna seguro para SQL:
-     * minúsculas, espacios → guion bajo, elimina caracteres no alfanuméricos.
+     * Genera un nombre de columna seguro para SQL.
      */
     private String sanitizeColumnName(String name) {
-        return name.toLowerCase()
+        String clean = name.toLowerCase()
                 .trim()
                 .replaceAll("\\s+", "_")
                 .replaceAll("[^a-z0-9_]", "");
+        // MySQL no permite nombres de columna que empiecen con dígito
+        if (!clean.isEmpty() && Character.isDigit(clean.charAt(0))) {
+            clean = "_" + clean;
+        }
+        return clean.isEmpty() ? "col_sin_nombre" : clean;
+    }
+
+    /**
+     * Limpia el valor raw del CSV según el tipo SQL destino.
+     * - Tipos numéricos: quita %, $, comas de miles. Si tras limpiar el valor
+     *   no es un número válido (N/A, -, null, texto), retorna null → se guarda como NULL.
+     * - Otros tipos: retorna el valor tal cual (trim).
+     */
+    private String cleanValue(String raw, String sqlType) {
+        String trimmed = raw.trim();
+        boolean isNumeric = sqlType.matches("INT|BIGINT|FLOAT|DOUBLE|DECIMAL\\(.*\\)");
+        if (isNumeric) {
+            String cleaned = trimmed
+                    .replace("%", "")
+                    .replace("$", "")
+                    .replace(",", "")
+                    .trim();
+            // Si tras limpiar está vacío o no es un número válido → NULL
+            if (cleaned.isEmpty()) return null;
+            try {
+                Double.parseDouble(cleaned);
+                return cleaned;
+            } catch (NumberFormatException e) {
+                return null; // N/A, -, n/d, texto, etc. → NULL
+            }
+        }
+        return trimmed;
     }
 }

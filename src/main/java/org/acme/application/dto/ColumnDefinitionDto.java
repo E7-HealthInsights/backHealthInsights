@@ -22,7 +22,7 @@ public class ColumnDefinitionDto {
      */
     @NotBlank(message = "El tipo SQL es obligatorio")
     @Pattern(
-            regexp = "VARCHAR\\(255\\)|TEXT|INT|BIGINT|DECIMAL\\(10,2\\)|FLOAT|BOOLEAN|DATE|DATETIME|TIMESTAMP|JSON",
+            regexp = "VARCHAR\\(255\\)|TEXT|INT|BIGINT|DECIMAL\\(10,2\\)|FLOAT|DOUBLE|BOOLEAN|DATE|DATETIME|TIMESTAMP|JSON",
             message = "Tipo SQL no permitido"
     )
     private String sqlType;
