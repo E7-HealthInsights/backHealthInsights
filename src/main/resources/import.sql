@@ -129,19 +129,16 @@ INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (5, 'TABLE');
 -- WIDGETS DEFAULT DIRECTOR FINANZAS (usuario_id = '3')
 -- ================================================
 INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
-    (UUID(), 'Gasto salud % PIB por año', NULL,
-     2,
-     'SELECT time_period, obs_value FROM worldbank_health_expenditure ORDER BY time_period', 1, 3);
+    (UUID(), 'Gasto salud % PIB por año', NULL, 2,
+     '{"tabla":"f4_pib_bancomundial","colX":"time_period","colY":"obs_value","funcion":"AVG","groupBy":"time_period"}',
+     1, 3);
 
 INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
-    (UUID(), 'Gasto per cápita diabetes USD', NULL,
-     1,
-     'SELECT expenditure_per_person_usd FROM idf_diabetes_atlas WHERE country_region = ''Mexico'' AND years = 2024', 2, 3);
+    (UUID(), 'Cobertura pública vs privada', NULL, 4,
+     '{"tabla":"f11_health_coverage_oecd","colLabel":"insurance_type","colValue":"obs_value","funcion":"AVG"}',
+     3, 3);
 
- INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
-     (UUID(), 'Cobertura pública vs privada', NULL, 4,
-      'SELECT insurance_type, AVG(obs_value) FROM oecd_healthcare_coverage WHERE unit_measure = ''PT_POP'' GROUP BY insurance_type', 3, 3);
-
- INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
-     (UUID(), 'Evolución gasto OCDE', '84f3167c-7088-4d63-8f8f-bedc1f95e080', 2,
-      'SELECT time_period, obs_value FROM oecd_health_expenditure ORDER BY time_period', 4, NULL);
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+    (UUID(), 'Evolución gasto OCDE', NULL, 2,
+     '{"tabla":"f11_health_coverage_oecd","colX":"time_period","colY":"obs_value","funcion":"AVG","groupBy":"time_period"}',
+     4, 3);
