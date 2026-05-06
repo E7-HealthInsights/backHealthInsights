@@ -7,6 +7,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.application.dto.CreateWidgetDto;
+import org.acme.application.dto.WidgetResponseDto;
 import org.acme.application.usecase.CreateWidgetUseCase;
 import org.acme.application.usecase.GetUserWidgetsUseCase;
 import org.acme.domain.models.Widget;
@@ -26,10 +27,16 @@ public class WidgetResource {
 
     @POST
     @RolesAllowed({"DIRECTOR_GENERAL", "DIRECTOR_FINANZAS", "DIRECTOR_MERCADOTECNIA"})
-    public Response createWidget(@Valid CreateWidgetDto dto) {
-        Widget widget = createWidgetUseCase.execute(dto);
+    public Response createWidget(@Valid CreateWidgetDto requestdto) {
+        Widget widget = createWidgetUseCase.execute(requestdto);
+        WidgetResponseDto dto = new WidgetResponseDto();
+        dto.setId(widget.getId());
+        dto.setTitulo(widget.getTitulo());
+        dto.setOrden(widget.getOrden());
+        dto.setTipo(widget.getTipo() != null ? widget.getTipo().getNombre() : null);
+
         return Response.status(Response.Status.CREATED)
-                .entity(widget)
+                .entity(dto)
                 .build();
     }
 
@@ -37,8 +44,8 @@ public class WidgetResource {
     @RolesAllowed({"DIRECTOR_GENERAL", "DIRECTOR_FINANZAS", "DIRECTOR_MERCADOTECNIA"})
     public Response getWidgets() {
 
-        List<Widget> widgets = getUserWidgetsUseCase.execute();
+        List<WidgetResponseDto> response = getUserWidgetsUseCase.execute();
 
-        return Response.ok(widgets).build();
+        return Response.ok(response).build();
     }
 }
