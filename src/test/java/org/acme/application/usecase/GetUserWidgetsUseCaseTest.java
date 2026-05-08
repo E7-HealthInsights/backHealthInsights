@@ -1,19 +1,16 @@
 package org.acme.application.usecase;
 
 import org.acme.application.dto.WidgetResponseDto;
-import org.acme.domain.models.Role;
-import org.acme.domain.models.TipoWidget;
-import org.acme.domain.models.User;
-import org.acme.domain.models.Widget;
+import org.acme.domain.models.*;
+import org.acme.domain.repository.DatasetRepository;
+import org.acme.domain.repository.MetricaRepository;
 import org.acme.domain.repository.WidgetRepository;
 import org.acme.infrastructure.query.QueryExecutor;
 import org.acme.infrastructure.security.AuthContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,13 +22,19 @@ class GetUserWidgetsUseCaseTest {
     private GetUserWidgetsUseCase useCase;
     private User authenticatedUser;
     private Role role;
+    private Dataset datasetMock;
     private QueryExecutor queryExecutor;
+    private DatasetRepository datasetRepository;
+    private MetricaRepository metricaRepository;
 
     @BeforeEach
     void setUp() {
         widgetRepository = mock(WidgetRepository.class);
         authContext = mock(AuthContext.class);
         queryExecutor = mock(QueryExecutor.class);
+        datasetRepository = mock(DatasetRepository.class);
+        metricaRepository = mock(MetricaRepository.class);
+
 
         role = new Role((byte) 3, "DIRECTOR_FINANZAS");
         authenticatedUser = new User(
@@ -47,7 +50,18 @@ class GetUserWidgetsUseCaseTest {
         when(queryExecutor.execute(anyString(), anyString()))
                 .thenReturn(Map.of("value", 42));
 
-        useCase = new GetUserWidgetsUseCase(widgetRepository, authContext, queryExecutor);
+        // Dataset mock por defecto
+        datasetMock = new Dataset();
+        datasetMock.setId(UUID.randomUUID());
+        datasetMock.setFuente("IMSS");
+        when(datasetRepository.findByNombreTabla(anyString()))
+                .thenReturn(Optional.of(datasetMock));
+
+        // Métrica no encontrada por defecto
+        when(metricaRepository.findByColumnaCsvAndDatasetId(anyString(), any()))
+                .thenReturn(Optional.empty());
+
+        useCase = new GetUserWidgetsUseCase(widgetRepository, authContext, queryExecutor, datasetRepository, metricaRepository);
     }
 
     @Test
@@ -147,5 +161,124 @@ class GetUserWidgetsUseCaseTest {
 
         assertEquals(1, result.size());
         assertEquals(1438, result.get(0).getData().get("value"));
+    }
+
+    @Test
+    void executeShouldSetSubtituloFromDatasetFuente() {
+        TipoWidget tipo = new TipoWidget((byte) 1, "STAT");
+        String query = "{\"tabla\":\"imss_deteccion_diabetes\",\"funcion\":\"SUM\",\"columna\":\"detecciones\"}";
+
+        datasetMock.setFuente("IMSS");
+        when(datasetRepository.findByNombreTabla("imss_deteccion_diabetes"))
+                .thenReturn(Optional.of(datasetMock));
+
+        Widget widget = new Widget(UUID.randomUUID(), "Widget", authenticatedUser, tipo, query, 1, null);
+        when(widgetRepository.findByUserId(authenticatedUser.getId()))
+                .thenReturn(List.of(widget));
+
+        List<WidgetResponseDto> result = useCase.execute();
+
+        assertEquals("Fuente: IMSS", result.get(0).getSubtitulo());
+    }
+
+    @Test
+    void executeShouldLeaveSubtituloNullWhenDatasetNotFound() {
+        when(datasetRepository.findByNombreTabla(anyString())).thenReturn(Optional.empty());
+
+        TipoWidget tipo = new TipoWidget((byte) 1, "STAT");
+        String query = "{\"tabla\":\"tabla_inexistente\",\"funcion\":\"COUNT\",\"columna\":\"id\"}";
+        Widget widget = new Widget(UUID.randomUUID(), "Widget", authenticatedUser, tipo, query, 1, null);
+        when(widgetRepository.findByUserId(authenticatedUser.getId()))
+                .thenReturn(List.of(widget));
+
+        List<WidgetResponseDto> result = useCase.execute();
+
+        assertNull(result.get(0).getSubtitulo()); // no explota, solo deja null
+    }
+
+    @Test
+    void executeShouldAddLabelToDataWhenMetricaHasUnidad() {
+        TipoWidget tipo = new TipoWidget((byte) 1, "STAT");
+        String query = "{\"tabla\":\"f10_gasto_diabetes\",\"funcion\":\"MAX\",\"columna\":\"gastomillones_de_dolares\"}";
+
+        Metrica metrica = new Metrica();
+        metrica.setNombre("Gasto en diabetes");
+        metrica.setUnidad("Dolares");
+
+        when(datasetRepository.findByNombreTabla("f10_gasto_diabetes"))
+                .thenReturn(Optional.of(datasetMock));
+        when(metricaRepository.findByColumnaCsvAndDatasetId("gastomillones_de_dolares", datasetMock.getId()))
+                .thenReturn(Optional.of(metrica));
+        when(queryExecutor.execute(query, "STAT"))
+                .thenReturn(new HashMap<>(Map.of("value", 407209.0)));
+
+        Widget widget = new Widget(UUID.randomUUID(), "Gasto diabetes",
+                authenticatedUser, tipo, query, 1, null);
+        when(widgetRepository.findByUserId(authenticatedUser.getId()))
+                .thenReturn(List.of(widget));
+
+        List<WidgetResponseDto> result = useCase.execute();
+
+        assertEquals("Dolares", result.get(0).getData().get("label"));
+        assertEquals(407209.0,  result.get(0).getData().get("value"));
+    }
+
+    @Test
+    void executeShouldNotAddLabelWhenUnidadIsNull() {
+        TipoWidget tipo = new TipoWidget((byte) 1, "STAT");
+        String query = "{\"tabla\":\"imss_deteccion_diabetes\",\"funcion\":\"SUM\",\"columna\":\"detecciones\"}";
+
+        Metrica metrica = new Metrica();
+        metrica.setNombre("Detecciones");
+        metrica.setUnidad(null); // sin unidad
+
+        when(metricaRepository.findByColumnaCsvAndDatasetId("detecciones", datasetMock.getId()))
+                .thenReturn(Optional.of(metrica));
+        when(queryExecutor.execute(query, "STAT"))
+                .thenReturn(new HashMap<>(Map.of("value", 142300)));
+
+        Widget widget = new Widget(UUID.randomUUID(), "Total", authenticatedUser, tipo, query, 1, null);
+        when(widgetRepository.findByUserId(authenticatedUser.getId()))
+                .thenReturn(List.of(widget));
+
+        List<WidgetResponseDto> result = useCase.execute();
+
+        assertNull(result.get(0).getData().get("label")); // no agrega label si unidad es null
+        assertEquals(142300, result.get(0).getData().get("value"));
+    }
+
+    @Test
+    void executeShouldSetSeriesNameAndAxisLabelsForLineChart() {
+        TipoWidget tipo = new TipoWidget((byte) 2, "LINE");
+        String query = "{\"tabla\":\"worldbank_health_expenditure\",\"colX\":\"time_period\",\"colY\":\"obs_value\",\"funcion\":\"AVG\",\"groupBy\":\"time_period\"}";
+
+        Metrica metricaY = new Metrica();
+        metricaY.setNombre("Observación");
+        metricaY.setUnidad("%");
+
+        Metrica metricaX = new Metrica();
+        metricaX.setNombre("Período");
+        metricaX.setUnidad(null);
+
+        when(datasetRepository.findByNombreTabla("worldbank_health_expenditure"))
+                .thenReturn(Optional.of(datasetMock));
+        when(metricaRepository.findByColumnaCsvAndDatasetId("obs_value", datasetMock.getId()))
+                .thenReturn(Optional.of(metricaY));
+        when(metricaRepository.findByColumnaCsvAndDatasetId("time_period", datasetMock.getId()))
+                .thenReturn(Optional.of(metricaX));
+        when(queryExecutor.execute(query, "LINE"))
+                .thenReturn(new HashMap<>(Map.of("labels", List.of(2020, 2021), "values", List.of(5.8, 6.0))));
+
+        Widget widget = new Widget(UUID.randomUUID(), "Gasto % PIB",
+                authenticatedUser, tipo, query, 1, null);
+        when(widgetRepository.findByUserId(authenticatedUser.getId()))
+                .thenReturn(List.of(widget));
+
+        List<WidgetResponseDto> result = useCase.execute();
+
+        WidgetResponseDto dto = result.get(0);
+        assertEquals("Observación",       dto.getSeriesName());
+        assertEquals("Observación (%)",   dto.getyAxisLabel());
+        assertEquals("Período",           dto.getxAxisLabel());
     }
 }
