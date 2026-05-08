@@ -40,4 +40,11 @@ public class DatasetRepositoryImpl implements DatasetRepository, PanacheReposito
     public boolean existsByNombreTabla(String nombreTabla) {
         return count("nombreTabla", nombreTabla) > 0;
     }
+
+    @Override
+    public Optional<Dataset> findByNombreTabla(String nombreTabla) {
+        return find("nombreTabla", nombreTabla)
+                .firstResultOptional()
+                .map(DatasetMapper::toDomain);
+    }
 }

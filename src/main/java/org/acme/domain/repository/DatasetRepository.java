@@ -11,4 +11,5 @@ public interface DatasetRepository {
     Optional<Dataset> findDatasetById(UUID id);
     Dataset save(Dataset dataset);
     boolean existsByNombreTabla(String nombreTabla);
+    Optional<Dataset> findByNombreTabla(String nombreTabla);
 }
