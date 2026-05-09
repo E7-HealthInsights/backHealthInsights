@@ -6,6 +6,10 @@ import java.util.UUID;
 public class WidgetResponseDto {
     private UUID id;
     private String titulo;
+    private String subtitulo;
+    private String seriesName;
+    private String xAxisLabel;
+    private String yAxisLabel;
     private String tipo;
     private int orden;
     private Map<String, Object> data;
@@ -48,5 +52,37 @@ public class WidgetResponseDto {
 
     public void setData(Map<String, Object> data) {
         this.data = data;
+    }
+
+    public String getSubtitulo() {
+        return subtitulo;
+    }
+
+    public void setSubtitulo(String subtitulo) {
+        this.subtitulo = subtitulo;
+    }
+
+    public String getSeriesName() {
+        return seriesName;
+    }
+
+    public void setSeriesName(String seriesName) {
+        this.seriesName = seriesName;
+    }
+
+    public String getxAxisLabel() {
+        return xAxisLabel;
+    }
+
+    public void setxAxisLabel(String xAxisLabel) {
+        this.xAxisLabel = xAxisLabel;
+    }
+
+    public String getyAxisLabel() {
+        return yAxisLabel;
+    }
+
+    public void setyAxisLabel(String yAxisLabel) {
+        this.yAxisLabel = yAxisLabel;
     }
 }

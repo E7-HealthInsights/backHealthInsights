@@ -9,6 +9,7 @@ import org.acme.infrastructure.entities.MetricaEntity;
 import org.acme.infrastructure.mapper.MetricaMapper;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -40,5 +41,12 @@ public class MetricaRepositoryImpl implements MetricaRepository, PanacheReposito
 
             persist(entity);
         });
+    }
+
+    @Override
+    public Optional<Metrica> findByColumnaCsvAndDatasetId(String columnaCsv, UUID datasetId) {
+        return find("columnaCsv = ?1 and dataset.id = ?2", columnaCsv, datasetId)
+                .firstResultOptional()
+                .map(MetricaMapper::toDomain);
     }
 }
