@@ -24,6 +24,7 @@ public class QueryExecutor {
                 case "LINE", "BAR" -> callSeries(config);
                 case "PIE"         -> callPie(config);
                 case "TABLE"       -> callTable(config);
+                case "MULTISERIES" -> callMultiseries(config);
                 default -> Map.of("error", "Tipo no soportado: " + tipoNombre);
             };
         } catch (Exception e) {
@@ -33,11 +34,19 @@ public class QueryExecutor {
 
     private Map<String, Object> callStat(JsonNode c) throws SQLException {
         try (Connection conn = dataSource.getConnection();
-             CallableStatement cs = conn.prepareCall("{CALL sp_widget_stat(?,?,?)}")) {
+             CallableStatement cs = conn.prepareCall("{CALL sp_widget_stat(?,?,?,?,?)}")) {
 
             cs.setString(1, c.get("tabla").asText());
             cs.setString(2, c.get("funcion").asText());
             cs.setString(3, c.get("columna").asText());
+
+            if (c.has("filtroCol") && c.has("filtroVal")) {
+                cs.setString(4, c.get("filtroCol").asText());
+                cs.setString(5, c.get("filtroVal").asText());
+            } else {
+                cs.setNull(4, java.sql.Types.VARCHAR);
+                cs.setNull(5, java.sql.Types.VARCHAR);
+            }
 
             ResultSet rs = cs.executeQuery();
             Map<String, Object> result = new HashMap<>();
@@ -48,13 +57,21 @@ public class QueryExecutor {
 
     private Map<String, Object> callSeries(JsonNode c) throws SQLException {
         try (Connection conn = dataSource.getConnection();
-             CallableStatement cs = conn.prepareCall("{CALL sp_widget_series(?,?,?,?,?)}")) {
+             CallableStatement cs = conn.prepareCall("{CALL sp_widget_series(?,?,?,?,?,?,?)}")) {
 
             cs.setString(1, c.get("tabla").asText());
             cs.setString(2, c.get("colX").asText());
             cs.setString(3, c.get("colY").asText());
             cs.setString(4, c.get("funcion").asText());
             cs.setString(5, c.get("groupBy").asText());
+
+            if (c.has("filtroCol") && c.has("filtroVal")) {
+                cs.setString(6, c.get("filtroCol").asText());
+                cs.setString(7, c.get("filtroVal").asText());
+            } else {
+                cs.setNull(6, java.sql.Types.VARCHAR);
+                cs.setNull(7, java.sql.Types.VARCHAR);
+            }
 
             ResultSet rs = cs.executeQuery();
             List<Object> labels = new ArrayList<>();
@@ -109,6 +126,48 @@ public class QueryExecutor {
                 rows.add(row);
             }
             return Map.of("columns", columns, "rows", rows);
+        }
+    }
+
+    private Map<String, Object> callMultiseries(JsonNode c) throws SQLException {
+        try (Connection conn = dataSource.getConnection();
+             CallableStatement cs = conn.prepareCall("{CALL sp_widget_multiseries(?,?,?,?,?)}")) {
+    
+            cs.setString(1, c.get("tabla").asText());
+            cs.setString(2, c.get("colX").asText());
+            cs.setString(3, c.get("colY").asText());
+            cs.setString(4, c.get("colSerie").asText());
+            cs.setString(5, c.get("funcion").asText());
+    
+            ResultSet rs = cs.executeQuery();
+    
+            // Agrupa por label → { "2002": {"COVGCMED": 48.3, "PHINDUPI": null}, ... }
+            Map<Object, Map<String, Object>> grouped = new LinkedHashMap<>();
+            Set<String> seriesKeys = new LinkedHashSet<>();
+    
+            while (rs.next()) {
+                Object label = rs.getObject("label");
+                String serie = rs.getString("serie");
+                Object value = rs.getObject("value");
+    
+                grouped.computeIfAbsent(label, k -> new LinkedHashMap<>()).put(serie, value);
+                seriesKeys.add(serie);
+            }
+    
+            // Convierte a array de objetos para Recharts
+            // [{"label": 2002, "COVGCMED": 48.3}, {"label": 2002, "PHINDUPI": 2.8}, ...]
+            List<Map<String, Object>> data = new ArrayList<>();
+            for (Map.Entry<Object, Map<String, Object>> entry : grouped.entrySet()) {
+                Map<String, Object> point = new LinkedHashMap<>();
+                point.put("label", entry.getKey());
+                point.putAll(entry.getValue());
+                data.add(point);
+            }
+    
+            return Map.of(
+                "data",       data,
+                "seriesKeys", new ArrayList<>(seriesKeys)  // ["COVGCMED", "PHINDUPI"]
+            );
         }
     }
 }

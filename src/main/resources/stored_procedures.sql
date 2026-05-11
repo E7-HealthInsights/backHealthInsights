@@ -18,13 +18,23 @@ DELIMITER $$
 CREATE PROCEDURE sp_widget_stat(
     IN p_tabla    VARCHAR(150),
     IN p_funcion  VARCHAR(10),
-    IN p_columna  VARCHAR(100)
+    IN p_columna  VARCHAR(100),
+    IN p_filtro_col  VARCHAR(100),   -- nullable
+    IN p_filtro_val  VARCHAR(255)    -- nullable
 )
 BEGIN
-    SET @sql = CONCAT(
-        'SELECT ', p_funcion, '(`', p_columna, '`) AS value ',
-        'FROM `', p_tabla, '`'
-    );
+    IF p_filtro_col IS NOT NULL AND p_filtro_val IS NOT NULL THEN
+        SET @sql = CONCAT(
+            'SELECT ', p_funcion, '(`', p_columna, '`) AS value ',
+            'FROM `', p_tabla, '`',
+            'WHERE `', p_filtro_col, '` = ', p_filtro_val
+        );
+    ELSE
+        SET @sql = CONCAT(
+            'SELECT ', p_funcion, '(`', p_columna, '`) AS value ',
+            'FROM `', p_tabla, '`'
+        );
+    END IF;
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
@@ -35,23 +45,37 @@ END$$
 -- Ejemplo: ano, SUM(detecciones) GROUP BY ano
 -- ─────────────────────────────────────────────
 CREATE PROCEDURE sp_widget_series(
-    IN p_tabla    VARCHAR(150),
-    IN p_col_x    VARCHAR(100),
-    IN p_col_y    VARCHAR(100),
-    IN p_funcion  VARCHAR(10),
-    IN p_group_by VARCHAR(100)
+    IN p_tabla      VARCHAR(150),
+    IN p_col_x      VARCHAR(100),
+    IN p_col_y      VARCHAR(100),
+    IN p_funcion    VARCHAR(10),
+    IN p_group_by   VARCHAR(100),
+    IN p_filtro_col VARCHAR(100),
+    IN p_filtro_val VARCHAR(100)
 )
 BEGIN
-    SET @sql = CONCAT(
-        'SELECT `', p_col_x, '` AS label, ',
-        p_funcion, '(`', p_col_y, '`) AS value ',
-        'FROM `', p_tabla, '` ',
-        'GROUP BY `', p_col_x, '` ',
-        'ORDER BY `', p_col_x, '`'
-    );
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+    IF p_filtro_col IS NOT NULL AND p_filtro_val IS NOT NULL THEN
+        SET @sql = CONCAT(
+            'SELECT `', p_col_x, '` AS label, ',
+            p_funcion, '(`', p_col_y, '`) AS value ',
+            'FROM `', p_tabla, '` ',
+            'WHERE `', p_filtro_col, '` = ''', p_filtro_val, ''' ',
+            'GROUP BY `', p_col_x, '` ',
+            'ORDER BY `', p_col_x, '`'
+        );
+    ELSE
+        SET @sql = CONCAT(
+            'SELECT `', p_col_x, '` AS label, ',
+            p_funcion, '(`', p_col_y, '`) AS value ',
+            'FROM `', p_tabla, '` ',
+            'GROUP BY `', p_col_x, '` ',
+            'ORDER BY `', p_col_x, '`'
+        );
+    END IF;
+
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
 END$$
 
 -- ─────────────────────────────────────────────
@@ -95,6 +119,32 @@ BEGIN
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+END$$
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_widget_multiseries;
+DELIMITER $$
+
+CREATE PROCEDURE sp_widget_multiseries(
+    IN p_tabla    VARCHAR(150),
+    IN p_col_x    VARCHAR(100),
+    IN p_col_y    VARCHAR(100),
+    IN p_col_serie VARCHAR(100),   -- columna que define cada serie 
+    IN p_funcion  VARCHAR(10)
+)
+BEGIN
+    SET @sql = CONCAT(
+        'SELECT `', p_col_x, '` AS label, ',
+        '`', p_col_serie, '` AS serie, ',
+        p_funcion, '(`', p_col_y, '`) AS value ',
+        'FROM `', p_tabla, '` ',
+        'GROUP BY `', p_col_x, '`, `', p_col_serie, '` ',
+        'ORDER BY `', p_col_x, '`'
+    );
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
 END$$
 
 DELIMITER ;

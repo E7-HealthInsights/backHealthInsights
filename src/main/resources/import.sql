@@ -124,21 +124,54 @@ INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (2, 'LINE');
 INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (3, 'BAR');
 INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (4, 'PIE');
 INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (5, 'TABLE');
+INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (6, 'MULTISERIES');
 
 -- ================================================
 -- WIDGETS DEFAULT DIRECTOR FINANZAS (usuario_id = '3')
 -- ================================================
+
 INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
-    (UUID(), 'Gasto salud % PIB por año', NULL, 2,
-     '{"tabla":"f4_pib_bancomundial","colX":"time_period","colY":"obs_value","funcion":"AVG","groupBy":"time_period"}',
+    (UUID(), 'Gasto Público de México, 2024', NULL, 1,
+     '{\"tabla\": \"f12_idf_mexico_dolares\", \"funcion\": \"MAX\", \"columna\": \"value\", \"filtroCol\": \"_id\", \"filtroVal\": \"1\" }',
      1, 3);
 
 INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
-    (UUID(), 'Cobertura pública vs privada', NULL, 4,
-     '{"tabla":"f11_health_coverage_oecd","colLabel":"insurance_type","colValue":"obs_value","funcion":"AVG"}',
+    (UUID(), 'Gasto Per Cápita, 2024', NULL, 1,
+     '{\"tabla\": \"f12_idf_mexico_dolares\", \"funcion\": \"MAX\", \"columna\": \"value\", \"filtroCol\": \"_id\", \"filtroVal\": \"4\" }',
+     2, 3);
+
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+    (UUID(), 'Promedio histórico del PIB dedicado al sector salud', NULL, 1,
+     '{\"tabla\": \"f4_pib_bancomundial\", \"funcion\": \"AVG\", \"columna\": \"obs_value\" }',
      3, 3);
 
 INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
-    (UUID(), 'Evolución gasto OCDE', NULL, 2,
-     '{"tabla":"f11_health_coverage_oecd","colX":"time_period","colY":"obs_value","funcion":"AVG","groupBy":"time_period"}',
+    (UUID(), 'Evolución gasto % PIB 2000–2024', NULL, 3,
+     '{"tabla":"f4_pib_bancomundial","colX":"time_period","colY":"obs_value","funcion":"AVG","groupBy":"time_period"}',
      4, 3);
+
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Cobertura pública vs privada (evolución)', NULL, 6,
+ '{"tabla":"f11_health_coverage_oecd_pt","colX":"time_period","colY":"obs_value","colSerie":"insurance_type","funcion":"MAX"}',
+ 5, 3);
+
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Gasto en Diabetes vs otros países', NULL, 6,
+ '{"tabla":"f10_gasto_diabetes","colX":"ao","colY":"gastomillones_de_dolares","colSerie":"pais","funcion":"MAX"}',
+ 6, 3);
+
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Distribucion de cobertura por tipo de seguro', NULL, 4,
+ '{"tabla":"f11_health_coverage_oecd_pt","colLabel":"insurance_type","colValue":"obs_value","funcion":"AVG"}',
+ 7, 3);
+
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+    (UUID(), 'Gasto per cápita en diabetes evolución', NULL, 2,
+     '{"tabla":"f12_idf_mexico_dolares","colX":"year","colY":"value","funcion":"MAX","groupBy":"year", \"filtroCol\": \"indicator\", \"filtroVal\": \"Diabetes-related health expenditure per person (USD)\"}',
+     8, 3);
+
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Gasto vs Casos de diabetes (índice 2000=100)', NULL, 6,
+ '{"tabla":"f12_idf_gastovscasos","colX":"ano","colY":"valor","colSerie":"serie","funcion":"MAX"}',
+ 9, 3);
+    
