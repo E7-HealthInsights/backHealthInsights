@@ -16,28 +16,35 @@ DELIMITER $$
 -- Ejemplo: SUM(detecciones) → { value: 142300 }
 -- ─────────────────────────────────────────────
 CREATE PROCEDURE sp_widget_stat(
-    IN p_tabla    VARCHAR(150),
-    IN p_funcion  VARCHAR(10),
-    IN p_columna  VARCHAR(100),
-    IN p_filtro_col  VARCHAR(100),   -- nullable
-    IN p_filtro_val  VARCHAR(255)    -- nullable
+    IN p_tabla       VARCHAR(150),
+    IN p_funcion     VARCHAR(10),
+    IN p_columna     VARCHAR(100),
+    IN p_filtro_col  VARCHAR(100),   -- filtro 1 (opcional)
+    IN p_filtro_val  VARCHAR(255),
+    IN p_filtro_col2 VARCHAR(100),   -- filtro 2 (opcional)
+    IN p_filtro_val2 VARCHAR(255)
 )
 BEGIN
+    SET @where = '';
     IF p_filtro_col IS NOT NULL AND p_filtro_val IS NOT NULL THEN
-        SET @sql = CONCAT(
-            'SELECT ', p_funcion, '(`', p_columna, '`) AS value ',
-            'FROM `', p_tabla, '`',
-            'WHERE `', p_filtro_col, '` = ', p_filtro_val
-        );
-    ELSE
-        SET @sql = CONCAT(
-            'SELECT ', p_funcion, '(`', p_columna, '`) AS value ',
-            'FROM `', p_tabla, '`'
-        );
+        SET @where = CONCAT(' WHERE `', p_filtro_col, '` = ', QUOTE(p_filtro_val));
     END IF;
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+    IF p_filtro_col2 IS NOT NULL AND p_filtro_val2 IS NOT NULL THEN
+        IF @where = '' THEN
+            SET @where = CONCAT(' WHERE `', p_filtro_col2, '` = ', QUOTE(p_filtro_val2));
+        ELSE
+            SET @where = CONCAT(@where, ' AND `', p_filtro_col2, '` = ', QUOTE(p_filtro_val2));
+        END IF;
+    END IF;
+
+    SET @sql = CONCAT(
+        'SELECT ', p_funcion, '(`', p_columna, '`) AS value ',
+        'FROM `', p_tabla, '`',
+        @where
+    );
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
 END$$
 
 -- ─────────────────────────────────────────────
@@ -127,18 +134,35 @@ DROP PROCEDURE IF EXISTS sp_widget_multiseries;
 DELIMITER $$
 
 CREATE PROCEDURE sp_widget_multiseries(
-    IN p_tabla    VARCHAR(150),
-    IN p_col_x    VARCHAR(100),
-    IN p_col_y    VARCHAR(100),
-    IN p_col_serie VARCHAR(100),   -- columna que define cada serie 
-    IN p_funcion  VARCHAR(10)
+    IN p_tabla       VARCHAR(150),
+    IN p_col_x       VARCHAR(100),
+    IN p_col_y       VARCHAR(100),
+    IN p_col_serie   VARCHAR(100),   -- columna que define cada serie
+    IN p_funcion     VARCHAR(10),
+    IN p_filtro_col  VARCHAR(100),   -- filtro 1 (opcional, NULL = sin filtro)
+    IN p_filtro_val  VARCHAR(255),
+    IN p_filtro_col2 VARCHAR(100),   -- filtro 2 (opcional, NULL = sin filtro)
+    IN p_filtro_val2 VARCHAR(255)
 )
 BEGIN
+    SET @where = '';
+    IF p_filtro_col IS NOT NULL AND p_filtro_val IS NOT NULL THEN
+        SET @where = CONCAT(' WHERE `', p_filtro_col, '` = ', QUOTE(p_filtro_val));
+    END IF;
+    IF p_filtro_col2 IS NOT NULL AND p_filtro_val2 IS NOT NULL THEN
+        IF @where = '' THEN
+            SET @where = CONCAT(' WHERE `', p_filtro_col2, '` = ', QUOTE(p_filtro_val2));
+        ELSE
+            SET @where = CONCAT(@where, ' AND `', p_filtro_col2, '` = ', QUOTE(p_filtro_val2));
+        END IF;
+    END IF;
+
     SET @sql = CONCAT(
         'SELECT `', p_col_x, '` AS label, ',
         '`', p_col_serie, '` AS serie, ',
         p_funcion, '(`', p_col_y, '`) AS value ',
-        'FROM `', p_tabla, '` ',
+        'FROM `', p_tabla, '`',
+        @where, ' ',
         'GROUP BY `', p_col_x, '`, `', p_col_serie, '` ',
         'ORDER BY `', p_col_x, '`'
     );
