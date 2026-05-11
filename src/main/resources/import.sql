@@ -174,4 +174,56 @@ INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
 (UUID(), 'Gasto vs Casos de diabetes (índice 2000=100)', NULL, 6,
  '{"tabla":"f12_idf_gastovscasos","colX":"ano","colY":"valor","colSerie":"serie","funcion":"MAX"}',
  9, 3);
-    
+
+-- ================================================
+-- WIDGETS DEFAULT DIRECTOR MERCADOTECNIA (rol_id = 4)
+-- HU HI-485 - subtareas HI-504..HI-511
+-- ================================================
+
+-- HI-504: StatCard con no diagnosticados (vista calcula 100 - cobertura)
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), '% Personas con diabetes no diagnosticadas', NULL, 1,
+ '{"tabla":"v_f8_no_diagnosticados_actual","funcion":"MAX","columna":"porcentaje_no_diagnosticados"}',
+ 1, 4);
+
+-- HI-505: StatCard con estado prioritario (nombre del estado top en detecciones)
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Estado prioritario por detecciones', NULL, 1,
+ '{"tabla":"v_f5_estado_prioritario_actual","funcion":"MAX","columna":"nombre_estado"}',
+ 2, 4);
+
+-- HI-506: StatCard con % población con diabetes (prevalencia age-standardized 2024)
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), '% Población con diabetes (2024)', NULL, 1,
+ '{"tabla":"f12_idf_mexico_porcentajes","funcion":"MAX","columna":"value","filtroCol":"indicator","filtroVal":"Age-standardised prevalence of diabetes (%)","filtroCol2":"year","filtroVal2":"2024"}',
+ 3, 4);
+
+-- HI-507: Barras edad y sexo vs diabetes (DALYs Rate por edad, 3 series de sexo, año 2021)
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Carga de diabetes (DALYs) por edad y sexo', NULL, 6,
+ '{"tabla":"f7_burden_diabetes","colX":"age_group","colY":"value","colSerie":"sex","funcion":"MAX","filtroCol":"measure_name","filtroVal":"Disability-Adjusted Life Years (DALYs)","filtroCol2":"year","filtroVal2":"2021"}',
+ 4, 4);
+
+-- HI-508: Línea detecciones por año (SUM de todos los estados, sin filtros)
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Detecciones de diabetes por año', NULL, 2,
+ '{"tabla":"f5_diabetes_delegaciones","colX":"ano","colY":"detecciones","funcion":"SUM","groupBy":"ano"}',
+ 5, 4);
+
+-- HI-509: Barras obesidad y sobrepeso por edad (multiseries, ambos sexos, año 2022)
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Obesidad y sobrepeso por edad', NULL, 6,
+ '{"tabla":"f9_obesidad_paho","colX":"age_group","colY":"value","colSerie":"indicator_name","funcion":"MAX","filtroCol":"sex","filtroVal":"Both sexes","filtroCol2":"year","filtroVal2":"2022"}',
+ 6, 4);
+
+-- HI-510: Mapa de calor con carencias sociales por municipio (TABLE con 1 fila por municipio)
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Carencias sociales por municipio', NULL, 5,
+ '{"tabla":"v_f2_carencias_por_municipio","columnas":"municipio, rezago_educativo, acceso_salud, acceso_seguridad_social, calidad_vivienda, servicios_basicos, acceso_alimentacion","limite":20}',
+ 7, 4);
+
+-- HI-511: Tabla top 5 estados por detecciones (vista pre-ordenada)
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Top 5 estados con más detecciones', NULL, 5,
+ '{"tabla":"v_f5_top_estados_actual","columnas":"estado, detecciones_total","limite":5}',
+ 8, 4);
