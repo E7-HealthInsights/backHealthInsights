@@ -247,6 +247,98 @@ class GetUserWidgetsUseCaseTest {
         assertEquals(142300, result.get(0).getData().get("value"));
     }
 
+    // ─── Dashboard Mercadotecnia (rol_id = 4) ────────────────────────────
+
+    @Test
+    void executeShouldReturnMercadotecniaDefaultsWhenUserHasRole4() {
+        Role mktRole = new Role((byte) 4, "DIRECTOR_MERCADOTECNIA");
+        User mktUser = new User(UUID.randomUUID(), "Maria", "Mkt", "mkt@test.com",
+                mktRole, true, "fb-uid-mkt");
+        when(authContext.getUser()).thenReturn(mktUser);
+
+        TipoWidget statTipo  = new TipoWidget((byte) 1, "STAT");
+        TipoWidget lineTipo  = new TipoWidget((byte) 2, "LINE");
+        TipoWidget tableTipo = new TipoWidget((byte) 5, "TABLE");
+        TipoWidget msTipo    = new TipoWidget((byte) 6, "MULTISERIES");
+
+        List<Widget> defaults = List.of(
+                new Widget(UUID.randomUUID(), "% Personas con diabetes no diagnosticadas", null, statTipo,
+                        "{\"tabla\":\"v_f8_no_diagnosticados_actual\",\"funcion\":\"MAX\",\"columna\":\"porcentaje_no_diagnosticados\"}", 1, (byte) 4),
+                new Widget(UUID.randomUUID(), "Estado prioritario por detecciones", null, statTipo,
+                        "{\"tabla\":\"v_f5_estado_prioritario_actual\",\"funcion\":\"MAX\",\"columna\":\"nombre_estado\"}", 2, (byte) 4),
+                new Widget(UUID.randomUUID(), "% Población con diabetes (2024)", null, statTipo,
+                        "{\"tabla\":\"f12_idf_mexico_porcentajes\",\"funcion\":\"MAX\",\"columna\":\"value\"}", 3, (byte) 4),
+                new Widget(UUID.randomUUID(), "Carga de diabetes (DALYs) por edad y sexo", null, msTipo,
+                        "{\"tabla\":\"f7_burden_diabetes\",\"colX\":\"age_group\",\"colY\":\"value\",\"colSerie\":\"sex\",\"funcion\":\"MAX\"}", 4, (byte) 4),
+                new Widget(UUID.randomUUID(), "Detecciones de diabetes por año", null, lineTipo,
+                        "{\"tabla\":\"f5_diabetes_delegaciones\",\"colX\":\"ano\",\"colY\":\"detecciones\",\"funcion\":\"SUM\",\"groupBy\":\"ano\"}", 5, (byte) 4),
+                new Widget(UUID.randomUUID(), "Obesidad y sobrepeso por edad", null, msTipo,
+                        "{\"tabla\":\"f9_obesidad_paho\",\"colX\":\"age_group\",\"colY\":\"value\",\"colSerie\":\"indicator_name\",\"funcion\":\"MAX\"}", 6, (byte) 4),
+                new Widget(UUID.randomUUID(), "Carencias sociales por municipio", null, tableTipo,
+                        "{\"tabla\":\"v_f2_carencias_por_municipio\",\"columnas\":\"municipio, rezago_educativo\",\"limite\":20}", 7, (byte) 4),
+                new Widget(UUID.randomUUID(), "Top 5 estados con más detecciones", null, tableTipo,
+                        "{\"tabla\":\"v_f5_top_estados_actual\",\"columnas\":\"estado, detecciones_total\",\"limite\":5}", 8, (byte) 4)
+        );
+
+        when(widgetRepository.findDefaultsByRolId((byte) 4)).thenReturn(defaults);
+
+        List<WidgetResponseDto> result = useCase.execute();
+
+        assertEquals(8, result.size());
+        verify(widgetRepository, times(1)).findDefaultsByRolId((byte) 4);
+        verify(widgetRepository, never()).findDefaultsByRolId((byte) 3);
+        // los títulos corresponden a las 8 subtareas de HI-485
+        List<String> titles = result.stream().map(WidgetResponseDto::getTitulo).toList();
+        assertTrue(titles.contains("% Personas con diabetes no diagnosticadas"));
+        assertTrue(titles.contains("Estado prioritario por detecciones"));
+        assertTrue(titles.contains("Top 5 estados con más detecciones"));
+    }
+
+    @Test
+    void executeShouldPassMultiseriesQueryWithDoubleFilterToExecutor() {
+        Role mktRole = new Role((byte) 4, "DIRECTOR_MERCADOTECNIA");
+        User mktUser = new User(UUID.randomUUID(), "Maria", "Mkt", "mkt@test.com",
+                mktRole, true, "fb-uid-mkt");
+        when(authContext.getUser()).thenReturn(mktUser);
+
+        TipoWidget msTipo = new TipoWidget((byte) 6, "MULTISERIES");
+        String hi507Query = "{\"tabla\":\"f7_burden_diabetes\",\"colX\":\"age_group\",\"colY\":\"value\",\"colSerie\":\"sex\",\"funcion\":\"MAX\","
+                + "\"filtroCol\":\"measure_name\",\"filtroVal\":\"Disability-Adjusted Life Years (DALYs)\","
+                + "\"filtroCol2\":\"year\",\"filtroVal2\":\"2021\"}";
+
+        Widget hi507 = new Widget(UUID.randomUUID(), "Carga de diabetes (DALYs) por edad y sexo",
+                null, msTipo, hi507Query, 4, (byte) 4);
+        when(widgetRepository.findDefaultsByRolId((byte) 4)).thenReturn(List.of(hi507));
+
+        useCase.execute();
+
+        // El JSON crudo (incluyendo filtroCol2/filtroVal2) debe llegar tal cual al executor
+        verify(queryExecutor, times(1)).execute(hi507Query, "MULTISERIES");
+    }
+
+    @Test
+    void executeShouldPassStatQueryWithDoubleFilterToExecutor() {
+        Role mktRole = new Role((byte) 4, "DIRECTOR_MERCADOTECNIA");
+        User mktUser = new User(UUID.randomUUID(), "Maria", "Mkt", "mkt@test.com",
+                mktRole, true, "fb-uid-mkt");
+        when(authContext.getUser()).thenReturn(mktUser);
+
+        TipoWidget statTipo = new TipoWidget((byte) 1, "STAT");
+        String hi506Query = "{\"tabla\":\"f12_idf_mexico_porcentajes\",\"funcion\":\"MAX\",\"columna\":\"value\","
+                + "\"filtroCol\":\"indicator\",\"filtroVal\":\"Age-standardised prevalence of diabetes (%)\","
+                + "\"filtroCol2\":\"year\",\"filtroVal2\":\"2024\"}";
+
+        Widget hi506 = new Widget(UUID.randomUUID(), "% Población con diabetes (2024)",
+                null, statTipo, hi506Query, 3, (byte) 4);
+        when(widgetRepository.findDefaultsByRolId((byte) 4)).thenReturn(List.of(hi506));
+        when(queryExecutor.execute(hi506Query, "STAT")).thenReturn(Map.of("value", 16.4));
+
+        List<WidgetResponseDto> result = useCase.execute();
+
+        verify(queryExecutor, times(1)).execute(hi506Query, "STAT");
+        assertEquals(16.4, result.get(0).getData().get("value"));
+    }
+
     @Test
     void executeShouldSetSeriesNameAndAxisLabelsForLineChart() {
         TipoWidget tipo = new TipoWidget((byte) 2, "LINE");
