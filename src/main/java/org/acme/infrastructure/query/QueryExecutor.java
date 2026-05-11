@@ -34,7 +34,7 @@ public class QueryExecutor {
 
     private Map<String, Object> callStat(JsonNode c) throws SQLException {
         try (Connection conn = dataSource.getConnection();
-             CallableStatement cs = conn.prepareCall("{CALL sp_widget_stat(?,?,?,?,?)}")) {
+             CallableStatement cs = conn.prepareCall("{CALL sp_widget_stat(?,?,?,?,?,?,?)}")) {
 
             cs.setString(1, c.get("tabla").asText());
             cs.setString(2, c.get("funcion").asText());
@@ -46,6 +46,14 @@ public class QueryExecutor {
             } else {
                 cs.setNull(4, java.sql.Types.VARCHAR);
                 cs.setNull(5, java.sql.Types.VARCHAR);
+            }
+
+            if (c.has("filtroCol2") && c.has("filtroVal2")) {
+                cs.setString(6, c.get("filtroCol2").asText());
+                cs.setString(7, c.get("filtroVal2").asText());
+            } else {
+                cs.setNull(6, java.sql.Types.VARCHAR);
+                cs.setNull(7, java.sql.Types.VARCHAR);
             }
 
             ResultSet rs = cs.executeQuery();
@@ -131,13 +139,29 @@ public class QueryExecutor {
 
     private Map<String, Object> callMultiseries(JsonNode c) throws SQLException {
         try (Connection conn = dataSource.getConnection();
-             CallableStatement cs = conn.prepareCall("{CALL sp_widget_multiseries(?,?,?,?,?)}")) {
-    
+             CallableStatement cs = conn.prepareCall("{CALL sp_widget_multiseries(?,?,?,?,?,?,?,?,?)}")) {
+
             cs.setString(1, c.get("tabla").asText());
             cs.setString(2, c.get("colX").asText());
             cs.setString(3, c.get("colY").asText());
             cs.setString(4, c.get("colSerie").asText());
             cs.setString(5, c.get("funcion").asText());
+
+            if (c.has("filtroCol") && c.has("filtroVal")) {
+                cs.setString(6, c.get("filtroCol").asText());
+                cs.setString(7, c.get("filtroVal").asText());
+            } else {
+                cs.setNull(6, java.sql.Types.VARCHAR);
+                cs.setNull(7, java.sql.Types.VARCHAR);
+            }
+
+            if (c.has("filtroCol2") && c.has("filtroVal2")) {
+                cs.setString(8, c.get("filtroCol2").asText());
+                cs.setString(9, c.get("filtroVal2").asText());
+            } else {
+                cs.setNull(8, java.sql.Types.VARCHAR);
+                cs.setNull(9, java.sql.Types.VARCHAR);
+            }
     
             ResultSet rs = cs.executeQuery();
     

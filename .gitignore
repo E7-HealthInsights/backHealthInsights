@@ -39,6 +39,7 @@ nb-configuration.xml
 # Local environment
 .env
 comando.md
+/temp_csv/
 
 # Plugin directory
 /.quarkus/cli/plugins/
