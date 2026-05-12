@@ -20,7 +20,7 @@ public class MetricaEntity {
     @Column(name = "columna_csv", nullable = false, length = 50)
     private String columnaCsv;
 
-    @Column(name = "unidad", length = 10)
+    @Column(name = "unidad", length = 50)
     private String unidad;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
