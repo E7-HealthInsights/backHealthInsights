@@ -63,3 +63,20 @@ WHERE indicator_name LIKE 'Diabetes treatment coverage%age-standardized%'
       FROM f8_prevalence_treatment_diabetes
       WHERE indicator_name LIKE 'Diabetes treatment coverage%age-standardized%'
   );
+
+-- ─── Widget 5 Director General: Heatmap defunciones por estado y año ──
+DROP VIEW IF EXISTS v_f3_defunciones_heatmap;
+CREATE VIEW v_f3_defunciones_heatmap AS
+SELECT ent_regis, anio_ocur, COUNT(*) AS defunciones
+FROM f3_defunciones_inegi2012_2024
+GROUP BY ent_regis, anio_ocur
+ORDER BY ent_regis, anio_ocur;
+
+-- ─── Widget 7 Director General: Dona %PIB salud vs resto (2024) ───────
+DROP VIEW IF EXISTS v_pib_dona_2024;
+CREATE VIEW v_pib_dona_2024 AS
+SELECT 'Salud' AS categoria, MAX(OBS_VALUE) AS valor
+FROM f4_pib_bancomundial WHERE TIME_PERIOD = '2024'
+UNION ALL
+SELECT 'Resto', 100 - MAX(OBS_VALUE)
+FROM f4_pib_bancomundial WHERE TIME_PERIOD = '2024';
