@@ -125,6 +125,7 @@ INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (3, 'BAR');
 INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (4, 'PIE');
 INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (5, 'TABLE');
 INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (6, 'MULTISERIES');
+INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (7, 'MULTIBAR');
 
 -- ================================================
 -- WIDGETS DEFAULT DIRECTOR FINANZAS (usuario_id = '3')
@@ -227,3 +228,65 @@ INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
 (UUID(), 'Top 5 estados con más detecciones', NULL, 5,
  '{"tabla":"v_f5_top_estados_actual","columnas":"estado, detecciones_total","limite":5}',
  8, 4);
+
+-- ================================================
+-- WIDGETS DEFAULT DIRECTOR GENERAL (usuario_id = '2')
+-- ================================================
+
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+    (UUID(), 'Casos de diabetes en México', NULL, 1,
+     '{\"tabla\": \"fuente1_datos_casos_ssa\", \"funcion\": \"MAX\", \"columna\": \"Valor\", \"filtroCol\": \"_id\", \"filtroVal\": \"36\" }',
+     1, 2);
+
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+    (UUID(), 'Tasa de mortalidad por diabetes (100 mil habitantes)', NULL, 1,
+     '{\"tabla\": \"fuente1_datos_casos_ssa\", \"funcion\": \"MAX\", \"columna\": \"Valor\", \"filtroCol\": \"_id\", \"filtroVal\": \"108\" }',
+     2, 2);
+
+-- StatCard personas no diagnosticadas 2024
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Personas con diabetes no diagnosticadas (2024)', NULL, 1,
+ '{"tabla":"f12_idf_mexico_limpio","funcion":"MAX","columna":"value","filtroCol":"indicator","filtroVal":"People with undiagnosed diabetes (1000s)","filtroCol2":"year","filtroVal2":"2024"}',
+ 3, 2);
+
+-- Línea Prevalencia 1990-2022
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Prevalencia de diabetes en México (1990-2022)', NULL, 2,
+ '{"tabla":"f8_prevalence_and_treatment_diabetes","colX":"year","colY":"value","funcion":"MAX","groupBy":"year","filtroCol":"indicator_name_en","filtroVal":"Prevalence of diabetes in adults aged 18+ years (FBG ≥7.0 mmol/L or HbA1c ≥6.5% or currently taking medication for diabetes) (crude estimates)","filtroCol2":"sex_en","filtroVal2":"Both sexes"}',
+ 4, 2);
+
+-- Heatmap defunciones por estado y año
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Defunciones por diabetes según estado y año', NULL, 5,
+ '{"tabla":"v_f3_defunciones_heatmap","columnas":"ent_regis, anio_ocur, defunciones","limite":500}',
+ 10, 2);
+
+-- Multibar tasa de muertes por edad y sexo
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Tasa de mortalidad por diabetes según edad y sexo', NULL, 7,
+ '{"tabla":"f7_burden_diabetes","colX":"age_group","colY":"value","colSerie":"sex","funcion":"MAX","filtroCol":"measure_name_en","filtroVal":"Deaths","filtroCol2":"metric_name_en","filtroVal2":"Rate"}',
+ 5, 2);
+
+-- Dona %PIB destinado a salud vs resto (2024)
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), '% PIB destinado a salud (2024)', NULL, 4,
+ '{"tabla":"v_pib_dona_2024","colLabel":"categoria","colValue":"valor","funcion":"MAX"}',
+ 6, 2);
+
+-- Línea DALYs / carga de la enfermedad
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Carga de enfermedad por diabetes (DALYs)', NULL, 2,
+ '{"tabla":"f7_burden_diabetes","colX":"year","colY":"value","funcion":"MAX","groupBy":"year","filtroCol":"measure_name_en","filtroVal":"Disability-Adjusted Life Years (DALYs)","filtroCol2":"age_group","filtroVal2":"All ages"}',
+ 7, 2);
+
+-- Línea personas con diabetes por año
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Personas con diabetes en México por año', NULL, 2,
+ '{"tabla":"fuente1_datos_casos_ssa","colX":"ao","colY":"valor","funcion":"MAX","groupBy":"ao","filtroCol":"indicador","filtroVal":"Casos (millones)"}',
+ 8, 2);
+
+-- Línea muertes por año
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+(UUID(), 'Muertes por diabetes en México por año', NULL, 2,
+ '{"tabla":"fuente1_datos_casos_ssa","colX":"ao","colY":"valor","funcion":"MAX","groupBy":"ao","filtroCol":"indicador","filtroVal":"Muertes(miles)"}',
+ 9, 2);

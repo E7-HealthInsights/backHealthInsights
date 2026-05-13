@@ -24,7 +24,7 @@ public class QueryExecutor {
                 case "LINE", "BAR" -> callSeries(config);
                 case "PIE"         -> callPie(config);
                 case "TABLE"       -> callTable(config);
-                case "MULTISERIES" -> callMultiseries(config);
+                case "MULTISERIES", "MULTIBAR" -> callMultiseries(config);
                 default -> Map.of("error", "Tipo no soportado: " + tipoNombre);
             };
         } catch (Exception e) {
@@ -65,7 +65,7 @@ public class QueryExecutor {
 
     private Map<String, Object> callSeries(JsonNode c) throws SQLException {
         try (Connection conn = dataSource.getConnection();
-             CallableStatement cs = conn.prepareCall("{CALL sp_widget_series(?,?,?,?,?,?,?)}")) {
+             CallableStatement cs = conn.prepareCall("{CALL sp_widget_series(?,?,?,?,?,?,?,?,?)}")) {
 
             cs.setString(1, c.get("tabla").asText());
             cs.setString(2, c.get("colX").asText());
@@ -79,6 +79,14 @@ public class QueryExecutor {
             } else {
                 cs.setNull(6, java.sql.Types.VARCHAR);
                 cs.setNull(7, java.sql.Types.VARCHAR);
+            }
+
+            if (c.has("filtroCol2") && c.has("filtroVal2")) {
+                cs.setString(8, c.get("filtroCol2").asText());
+                cs.setString(9, c.get("filtroVal2").asText());
+            } else {
+                cs.setNull(8, java.sql.Types.VARCHAR);
+                cs.setNull(9, java.sql.Types.VARCHAR);
             }
 
             ResultSet rs = cs.executeQuery();

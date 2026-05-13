@@ -52,34 +52,37 @@ END$$
 -- Ejemplo: ano, SUM(detecciones) GROUP BY ano
 -- ─────────────────────────────────────────────
 CREATE PROCEDURE sp_widget_series(
-    IN p_tabla      VARCHAR(150),
-    IN p_col_x      VARCHAR(100),
-    IN p_col_y      VARCHAR(100),
-    IN p_funcion    VARCHAR(10),
-    IN p_group_by   VARCHAR(100),
-    IN p_filtro_col VARCHAR(100),
-    IN p_filtro_val VARCHAR(100)
+    IN p_tabla       VARCHAR(150),
+    IN p_col_x       VARCHAR(100),
+    IN p_col_y       VARCHAR(100),
+    IN p_funcion     VARCHAR(10),
+    IN p_group_by    VARCHAR(100),
+    IN p_filtro_col  VARCHAR(100),
+    IN p_filtro_val  TEXT,
+    IN p_filtro_col2 VARCHAR(100),
+    IN p_filtro_val2 TEXT
 )
 BEGIN
+    SET @where = '';
     IF p_filtro_col IS NOT NULL AND p_filtro_val IS NOT NULL THEN
-        SET @sql = CONCAT(
-            'SELECT `', p_col_x, '` AS label, ',
-            p_funcion, '(`', p_col_y, '`) AS value ',
-            'FROM `', p_tabla, '` ',
-            'WHERE `', p_filtro_col, '` = ''', p_filtro_val, ''' ',
-            'GROUP BY `', p_col_x, '` ',
-            'ORDER BY `', p_col_x, '`'
-        );
-    ELSE
-        SET @sql = CONCAT(
-            'SELECT `', p_col_x, '` AS label, ',
-            p_funcion, '(`', p_col_y, '`) AS value ',
-            'FROM `', p_tabla, '` ',
-            'GROUP BY `', p_col_x, '` ',
-            'ORDER BY `', p_col_x, '`'
-        );
+        SET @where = CONCAT(' WHERE `', p_filtro_col, '` = ', QUOTE(p_filtro_val));
+    END IF;
+    IF p_filtro_col2 IS NOT NULL AND p_filtro_val2 IS NOT NULL THEN
+        IF @where = '' THEN
+            SET @where = CONCAT(' WHERE `', p_filtro_col2, '` = ', QUOTE(p_filtro_val2));
+        ELSE
+            SET @where = CONCAT(@where, ' AND `', p_filtro_col2, '` = ', QUOTE(p_filtro_val2));
+        END IF;
     END IF;
 
+    SET @sql = CONCAT(
+        'SELECT `', p_col_x, '` AS label, ',
+        p_funcion, '(`', p_col_y, '`) AS value ',
+        'FROM `', p_tabla, '` ',
+        @where, ' ',
+        'GROUP BY `', p_col_x, '` ',
+        'ORDER BY `', p_col_x, '`'
+    );
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;

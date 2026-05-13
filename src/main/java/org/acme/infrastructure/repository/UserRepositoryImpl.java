@@ -31,6 +31,7 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase
     }
 
     @Override
+    @Transactional
     public Optional<User> findByFirebaseUuid(String firebaseUuid) {
         Optional<UserEntity> optionalUserEntity = find("providerId", firebaseUuid)
                 .withHint("jakarta.persistence.loadgraph", getEntityManager()
