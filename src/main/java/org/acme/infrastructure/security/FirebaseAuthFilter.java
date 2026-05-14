@@ -41,6 +41,10 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
             return;
         }
 
+        if(path.startsWith("/status")){
+            return;
+        }
+
         if (requestContext.getMethod().equalsIgnoreCase("OPTIONS")) {
             return;
         }
