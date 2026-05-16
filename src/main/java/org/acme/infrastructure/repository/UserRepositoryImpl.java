@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import org.acme.domain.models.User;
 import org.acme.domain.repository.UserRepository;
 import org.acme.infrastructure.entities.UserEntity;
+import org.acme.infrastructure.entities.RoleEntity;
 import org.acme.infrastructure.mapper.UserMapper;
 
 import java.util.ArrayList;
@@ -56,5 +57,27 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase
         return entities.stream()
                 .map(UserMapper::toDomain)
                 .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    @Transactional
+    public Optional<User> findUserById(UUID id) {
+        Optional<UserEntity> optEntity = find("id", id)
+                .withHint("jakarta.persistence.loadgraph", getEntityManager().getEntityGraph("User.full"))
+                .firstResultOptional();
+        return optEntity.map(UserMapper::toDomain);
+    }
+
+    @Override
+    @Transactional
+    public User update(User user) {
+        UserEntity entity = em.find(UserEntity.class, user.getId());
+        entity.setName(user.getName());
+        entity.setLastName(user.getLastName());
+        entity.setStatus(user.isStatus());
+        if (user.getRole() != null) {
+            entity.setRole(em.getReference(RoleEntity.class, user.getRole().getId()));
+        }
+        return user;
     }
 }
