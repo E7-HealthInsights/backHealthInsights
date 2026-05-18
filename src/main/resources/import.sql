@@ -57,6 +57,20 @@ CREATE TABLE Widget (
                         FOREIGN KEY (tipo_id) REFERENCES Tipo_de_Grafica(id)
 );
 
+-- Tabla Proyeccion
+CREATE TABLE Proyeccion (
+    id VARCHAR(36) PRIMARY KEY,
+    title VARCHAR(100),
+    descripcion text,
+    usuario_id VARCHAR(36),
+    query text,
+    fecha_creacion DATETIME,
+    fecha_actualizacion DATETIME,
+
+    FOREIGN KEY (usuario_id) REFERENCES Users(id)
+);
+
+
 
 -- ── Roles ─────────────────────────────────────────────────────────────────────
 
