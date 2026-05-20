@@ -65,6 +65,7 @@ public class UploadDatasetUseCase {
         dataset.setArchivoCsv(dto.getArchivoNombre());
         dataset.setEstado(true);
         dataset.setFechaActualizacion(LocalDateTime.now());
+        dataset.setModifiedBy(dto.getModifiedBy());
 
         Dataset savedDataset = datasetRepository.save(dataset);
         LOG.infof("Dataset '%s' persistido con id=%s, tabla='%s'",

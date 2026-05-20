@@ -10,6 +10,8 @@ import org.acme.domain.models.User;
 import org.acme.domain.repository.RoleRepository;
 import org.acme.domain.repository.UserRepository;
 import org.acme.infrastructure.firebase.FirebaseUserCreator;
+import org.acme.infrastructure.security.AuthContext;
+
 import java.util.UUID;
 import org.acme.domain.exception.EmailAlreadyExistsException;
 import org.acme.domain.exception.RoleNotFoundException;
@@ -21,12 +23,14 @@ public class CreateUserUseCase {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final FirebaseUserCreator firebaseUserCreator;
+    private final AuthContext authContext;
 
     @Inject
-    public CreateUserUseCase(UserRepository userRepository, FirebaseUserCreator firebaseUserCreator, RoleRepository roleRepository){
+    public CreateUserUseCase(UserRepository userRepository, FirebaseUserCreator firebaseUserCreator, RoleRepository roleRepository, AuthContext authContext){
         this.userRepository = userRepository;
         this.firebaseUserCreator = firebaseUserCreator;
         this.roleRepository = roleRepository;
+        this.authContext = authContext;
     }
 
     public User execute(CreateUserDto createUserDto) throws FirebaseAuthException {
@@ -47,6 +51,8 @@ public class CreateUserUseCase {
         user.setEmail(createUserDto.getEmail());
         user.setStatus(true);
         user.setRole(role);
+        user.setModifiedBy(authContext.getUser().getId().toString());
+
 
         try {
             UserRecord firebaseUserRecord = firebaseUserCreator.create(user.getEmail(), createUserDto.getPassword());

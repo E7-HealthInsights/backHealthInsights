@@ -14,6 +14,7 @@ public class UserMapper {
         user.setEmail(entity.getEmail());
         user.setStatus(entity.isStatus());
         user.setProviderId(entity.getProviderId());
+        user.setModifiedBy(entity.getModifiedBy());
 
         // Solo mapeamos si la relacion esta inicializada por LazyLoading
         if(entity.getRole() != null && Hibernate.isInitialized(entity.getRole())){
@@ -30,6 +31,7 @@ public class UserMapper {
         entity.setEmail(user.getEmail());
         entity.setStatus(user.isStatus());
         entity.setProviderId(user.getProviderId());
+        entity.setModifiedBy(user.getModifiedBy());
         entity.setRole(user.getRole() != null ? RoleMapper.toEntity(user.getRole()) : null);
         return entity;
     }

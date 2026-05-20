@@ -34,6 +34,8 @@ public class UploadDatasetDto {
     @Valid
     private List<ColumnDefinitionDto> columnas;
 
+    private String modifiedBy;
+
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 
@@ -51,4 +53,7 @@ public class UploadDatasetDto {
 
     public List<ColumnDefinitionDto> getColumnas() { return columnas; }
     public void setColumnas(List<ColumnDefinitionDto> columnas) { this.columnas = columnas; }
+
+    public String getModifiedBy() { return modifiedBy; }
+    public void setModifiedBy(String modifiedBy) { this.modifiedBy = modifiedBy; }
 }

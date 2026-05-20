@@ -86,6 +86,7 @@ public class UserResource {
             dto.setEmail(user.getEmail());
             dto.setRole(user.getRole().getName());
             dto.setStatus(user.isStatus());
+            dto.setModifiedBy(user.getModifiedBy());
             return Response.ok(dto).build();
 
         } catch (UserNotFoundException e) {
@@ -120,6 +121,7 @@ public class UserResource {
             dto.setEmail(user.getEmail());
             dto.setRole(user.getRole().getName());
             dto.setStatus(user.isStatus());
+            dto.setModifiedBy(user.getModifiedBy());
             return dto;
         }).toList();
 
