@@ -16,6 +16,8 @@ public class UpdateUserDto {
 
     private Boolean status;
 
+    private String justification;
+
     public String getName() {
         return name;
     }
@@ -46,6 +48,14 @@ public class UpdateUserDto {
 
     public void setStatus(Boolean status) {
         this.status = status;
+    }
+
+    public String getJustification() {
+        return justification;
+    }
+
+    public void setJustification(String justification) {
+        this.justification = justification;
     }
 
 }
