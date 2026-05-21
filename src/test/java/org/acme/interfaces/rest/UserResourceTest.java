@@ -78,6 +78,48 @@ class UserResourceTest {
         if (otherRoleId != null) roleRepository.deleteById(otherRoleId);
     }
 
+    // ── DELETE /users/{id} ───────────────────────────────────────────────────
+
+    @Test
+    void deleteUserShouldReturn204WhenUserExists() {
+        given()
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .delete("/users/{id}", TEST_USER_ID)
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void deleteUserShouldReturn404WhenUserNotFound() {
+        UUID unknownId = UUID.randomUUID();
+
+        given()
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .delete("/users/{id}", unknownId)
+                .then()
+                .statusCode(404)
+                .body("message", notNullValue());
+    }
+
+    @Test
+    void deleteUserShouldActuallyRemoveUserFromDatabase() {
+        given()
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .delete("/users/{id}", TEST_USER_ID)
+                .then()
+                .statusCode(204);
+
+        given()
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .delete("/users/{id}", TEST_USER_ID)
+                .then()
+                .statusCode(404);
+    }
+
     // ── PUT /users/{id} ───────────────────────────────────────────────────────
 
     @Test
