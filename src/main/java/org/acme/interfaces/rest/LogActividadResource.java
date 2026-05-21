@@ -32,7 +32,7 @@ public class LogActividadResource {
                 .map(log -> {
                     LogActividadResponseDto dto = new LogActividadResponseDto();
                     dto.setId(log.getId());
-                    dto.setUsuarioId(log.getUsuarioId());
+                    dto.setAdminNombre(log.getAdminNombre());
                     dto.setAccion(log.getAccion());
                     dto.setDetalle(log.getDetalle());
                     dto.setEntidadTipo(log.getEntidadTipo());

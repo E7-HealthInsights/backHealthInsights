@@ -8,7 +8,7 @@ public class LogActividadMapper {
     public static LogActividad toDomain(LogActividadEntity entity) {
         LogActividad log = new LogActividad();
         log.setId(entity.getId());
-        log.setUsuarioId(entity.getUsuarioId());
+        log.setAdminNombre(entity.getUsuario() != null ? entity.getUsuario().getName() + " " + entity.getUsuario().getLastName() : "Desconocido");
         log.setAccion(entity.getAccion());
         log.setDetalle(entity.getDetalle());
         log.setEntidadTipo(entity.getEntidadTipo());

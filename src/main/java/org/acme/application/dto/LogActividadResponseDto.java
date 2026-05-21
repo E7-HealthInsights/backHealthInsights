@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public class LogActividadResponseDto {
     private UUID id;
-    private String usuarioId;
+    private String adminNombre;
     private String accion;
     private String detalle;
     private EntidadTipo entidadTipo;
@@ -17,8 +17,8 @@ public class LogActividadResponseDto {
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
-    public String getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(String usuarioId) { this.usuarioId = usuarioId; }
+    public String getAdminNombre() { return adminNombre; }
+    public void setAdminNombre(String adminNombre) { this.adminNombre = adminNombre; }
 
     public String getAccion() { return accion; }
     public void setAccion(String accion) { this.accion = accion; }

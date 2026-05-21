@@ -16,8 +16,9 @@ public class LogActividadEntity {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @Column(name = "usuario_id", length = 36)
-    private String usuarioId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", insertable = false, updatable = false)
+    private UserEntity usuario;
 
     @Column(name = "accion", nullable = false, length = 200)
     private String accion;
@@ -38,8 +39,8 @@ public class LogActividadEntity {
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
-    public String getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(String usuarioId) { this.usuarioId = usuarioId; }
+    public UserEntity getUsuario() { return usuario; }
+    public void setUsuario(UserEntity usuario) { this.usuario = usuario; }
 
     public String getAccion() { return accion; }
     public void setAccion(String accion) { this.accion = accion; }
