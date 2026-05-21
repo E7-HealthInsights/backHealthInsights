@@ -4,7 +4,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.GET;
@@ -17,7 +17,7 @@ import org.acme.application.dto.CreateUserDto;
 import org.acme.application.dto.UpdateUserDto;
 import org.acme.application.dto.UserResponseDto;
 import org.acme.application.usecase.CreateUserUseCase;
-import org.acme.application.usecase.DeleteUserUseCase;
+import org.acme.application.usecase.DeactivateUserUseCase;
 import org.acme.application.usecase.GetUsersUseCase;
 import org.acme.application.usecase.UpdateUserUseCase;
 import org.acme.domain.models.User;
@@ -42,14 +42,14 @@ public class UserResource {
     AuthContext authContext;
     GetUsersUseCase getUsersUseCase;
     UpdateUserUseCase updateUserUseCase;
-    DeleteUserUseCase deleteUserUseCase;
+    DeactivateUserUseCase deactivateUserUseCase;
 
-    public UserResource(CreateUserUseCase createUserUseCase, AuthContext authContext, GetUsersUseCase getUsersUseCase, UpdateUserUseCase updateUserUseCase, DeleteUserUseCase deleteUserUseCase) {
+    public UserResource(CreateUserUseCase createUserUseCase, AuthContext authContext, GetUsersUseCase getUsersUseCase, UpdateUserUseCase updateUserUseCase, DeactivateUserUseCase deactivateUserUseCase) {
         this.createUserUseCase = createUserUseCase;
         this.authContext = authContext;
         this.getUsersUseCase = getUsersUseCase;
         this.updateUserUseCase = updateUserUseCase;
-        this.deleteUserUseCase = deleteUserUseCase;
+        this.deactivateUserUseCase = deactivateUserUseCase;
     }
 
     @POST
@@ -109,12 +109,12 @@ public class UserResource {
         }
     }
 
-    @DELETE
+    @PATCH
     @Path("/{id}")
     @RolesAllowed("ADMIN")
-    public Response deleteUser(@PathParam("id") UUID id) {
+    public Response deactivateUser(@PathParam("id") UUID id) {
         try {
-            deleteUserUseCase.execute(id);
+            deactivateUserUseCase.execute(id);
             return Response.noContent().build();
 
         } catch (UserNotFoundException e) {

@@ -11,12 +11,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class DeleteUserUseCaseTest {
+class DeactivateUserUseCaseTest {
 
     private UserRepository userRepository;
-    private DeleteUserUseCase useCase;
+    private DeactivateUserUseCase useCase;
 
     private final UUID USER_ID = UUID.randomUUID();
     private User existingUser;
@@ -24,19 +25,27 @@ class DeleteUserUseCaseTest {
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        useCase = new DeleteUserUseCase(userRepository);
+        useCase = new DeactivateUserUseCase(userRepository);
 
         Role adminRole = new Role((byte) 1, "ADMIN");
         existingUser = new User(USER_ID, "Juan", "Pérez", "juan@test.com", adminRole, true, "firebase-uid");
 
         when(userRepository.findUserById(USER_ID)).thenReturn(Optional.of(existingUser));
+        when(userRepository.update(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
     @Test
-    void executeShouldCallDeleteWhenUserExists() {
+    void executeShouldSetStatusFalse() {
         useCase.execute(USER_ID);
 
-        verify(userRepository, times(1)).deleteUserById(USER_ID);
+        assertFalse(existingUser.isStatus());
+    }
+
+    @Test
+    void executeShouldCallUpdateAfterDeactivating() {
+        useCase.execute(USER_ID);
+
+        verify(userRepository, times(1)).update(existingUser);
     }
 
     @Test
@@ -45,27 +54,24 @@ class DeleteUserUseCaseTest {
         when(userRepository.findUserById(unknownId)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> useCase.execute(unknownId));
-        verify(userRepository, never()).deleteUserById(any());
+        verify(userRepository, never()).update(any());
     }
 
     @Test
-    void executeShouldNotCallDeleteWhenUserNotFound() {
-        UUID unknownId = UUID.randomUUID();
-        when(userRepository.findUserById(unknownId)).thenReturn(Optional.empty());
-
-        try {
-            useCase.execute(unknownId);
-        } catch (UserNotFoundException ignored) {}
-
-        verify(userRepository, never()).deleteUserById(unknownId);
-    }
-
-    @Test
-    void executeShouldCallFindUserByIdBeforeDelete() {
+    void executeShouldCallFindBeforeUpdate() {
         useCase.execute(USER_ID);
 
         var inOrder = inOrder(userRepository);
         inOrder.verify(userRepository).findUserById(USER_ID);
-        inOrder.verify(userRepository).deleteUserById(USER_ID);
+        inOrder.verify(userRepository).update(any());
+    }
+
+    @Test
+    void executeShouldNotModifyOtherFields() {
+        useCase.execute(USER_ID);
+
+        assertEquals("Juan", existingUser.getName());
+        assertEquals("Pérez", existingUser.getLastName());
+        assertEquals("juan@test.com", existingUser.getEmail());
     }
 }

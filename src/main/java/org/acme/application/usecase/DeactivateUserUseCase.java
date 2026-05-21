@@ -4,22 +4,24 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.domain.exception.UserNotFoundException;
 import org.acme.domain.repository.UserRepository;
+import org.acme.domain.models.User;
 
 import java.util.UUID;
 
 @ApplicationScoped
-public class DeleteUserUseCase {
+public class DeactivateUserUseCase {
 
     private final UserRepository userRepository;
 
     @Inject
-    public DeleteUserUseCase(UserRepository userRepository) {
+    public DeactivateUserUseCase(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     public void execute(UUID userId) {
-        userRepository.findUserById(userId)
+        User user = userRepository.findUserById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
-        userRepository.deleteUserById(userId);
+        user.setStatus(false);
+        userRepository.update(user);
     }
 }
