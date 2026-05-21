@@ -4,6 +4,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.GET;
@@ -16,6 +17,7 @@ import org.acme.application.dto.CreateUserDto;
 import org.acme.application.dto.UpdateUserDto;
 import org.acme.application.dto.UserResponseDto;
 import org.acme.application.usecase.CreateUserUseCase;
+import org.acme.application.usecase.DeleteUserUseCase;
 import org.acme.application.usecase.GetUsersUseCase;
 import org.acme.application.usecase.UpdateUserUseCase;
 import org.acme.domain.models.User;
@@ -40,12 +42,14 @@ public class UserResource {
     AuthContext authContext;
     GetUsersUseCase getUsersUseCase;
     UpdateUserUseCase updateUserUseCase;
+    DeleteUserUseCase deleteUserUseCase;
 
-    public UserResource(CreateUserUseCase createUserUseCase, AuthContext authContext, GetUsersUseCase getUsersUseCase, UpdateUserUseCase updateUserUseCase) {
+    public UserResource(CreateUserUseCase createUserUseCase, AuthContext authContext, GetUsersUseCase getUsersUseCase, UpdateUserUseCase updateUserUseCase, DeleteUserUseCase deleteUserUseCase) {
         this.createUserUseCase = createUserUseCase;
         this.authContext = authContext;
         this.getUsersUseCase = getUsersUseCase;
         this.updateUserUseCase = updateUserUseCase;
+        this.deleteUserUseCase = deleteUserUseCase;
     }
 
     @POST
@@ -95,6 +99,26 @@ public class UserResource {
 
         } catch (RoleNotFoundException e) {
             return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponseDto(e.getMessage()))
+                    .build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponseDto("Error interno del servidor"))
+                    .build();
+        }
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @RolesAllowed("ADMIN")
+    public Response deleteUser(@PathParam("id") UUID id) {
+        try {
+            deleteUserUseCase.execute(id);
+            return Response.noContent().build();
+
+        } catch (UserNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
                     .entity(new ErrorResponseDto(e.getMessage()))
                     .build();
 

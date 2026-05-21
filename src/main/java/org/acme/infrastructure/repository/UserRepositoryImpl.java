@@ -70,6 +70,12 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase
 
     @Override
     @Transactional
+    public void deleteUserById(UUID id) {
+        deleteById(id);
+    }
+
+    @Override
+    @Transactional
     public User update(User user) {
         UserEntity entity = em.find(UserEntity.class, user.getId());
         entity.setName(user.getName());

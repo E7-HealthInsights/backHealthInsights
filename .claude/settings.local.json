@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls -la)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\yoshi\\\\OneDrive\\\\Escritorio\\\\Escuela\\\\TEC\\\\Semestre 6\\\\Back\\\\backHealthInsights\\\\src\\\\main\\\\java\\\\org\\\\acme\\\\domain\\\\repository\" -Name)"
+    ]
+  }
+}
