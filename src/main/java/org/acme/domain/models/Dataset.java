@@ -15,6 +15,18 @@ public class Dataset {
     private LocalDateTime fechaActualizacion;
     private String modifiedBy;
 
+    public Dataset(UUID id, String nombre, String nombreTabla, String descripcion, String fuente, String archivoCsv, String link, boolean estado, LocalDateTime fechaActualizacion) {
+        this.id = id;
+        this.nombre = nombre;
+        this.nombreTabla = nombreTabla;
+        this.descripcion = descripcion;
+        this.fuente = fuente;
+        this.archivoCsv = archivoCsv;
+        this.link = link;
+        this.estado = estado;
+        this.fechaActualizacion = fechaActualizacion;
+    }
+
     public Dataset() {}
 
     public UUID getId() { return id; }

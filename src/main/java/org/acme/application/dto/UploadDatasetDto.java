@@ -36,6 +36,8 @@ public class UploadDatasetDto {
 
     private String modifiedBy;
 
+    private String justification;
+
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 
@@ -56,4 +58,7 @@ public class UploadDatasetDto {
 
     public String getModifiedBy() { return modifiedBy; }
     public void setModifiedBy(String modifiedBy) { this.modifiedBy = modifiedBy; }
+
+    public String getJustification() { return justification; }
+    public void setJustification(String justification) { this.justification = justification; }
 }
