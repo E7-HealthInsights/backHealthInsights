@@ -10,6 +10,7 @@ public class DatasetResponseDto {
     private String fuente;
     private String link;
     private LocalDateTime fechaActualizacion;
+    private String modifiedBy;
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -28,4 +29,7 @@ public class DatasetResponseDto {
 
     public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
+
+    public String getModifiedBy() { return modifiedBy; }
+    public void setModifiedBy(String modifiedBy) { this.modifiedBy = modifiedBy; }
 }

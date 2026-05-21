@@ -11,6 +11,7 @@ CREATE TABLE Users (
                        role_id tinyint,
                        status BOOLEAN DEFAULT true,
                        provider_id VARCHAR(255),
+                       modified_by VARCHAR(36),
 
                        FOREIGN KEY (role_id) REFERENCES Role(id)
 );
@@ -24,7 +25,8 @@ CREATE TABLE Dataset (
                          archivo_csv VARCHAR(100),
                          link VARCHAR(500),
                          estado BOOLEAN DEFAULT true,
-                         fecha_actualizacion DATETIME
+                         fecha_actualizacion DATETIME,
+                         modified_by VARCHAR(36)
 );
 
 CREATE TABLE Metrica (
@@ -55,6 +57,18 @@ CREATE TABLE Widget (
                         FOREIGN KEY (usuario_id) REFERENCES Users(id),
                         FOREIGN KEY (rol_id) REFERENCES Role(id),
                         FOREIGN KEY (tipo_id) REFERENCES Tipo_de_Grafica(id)
+);
+
+--Tabla Log de actividad
+CREATE TABLE LogActividad (
+    id          VARCHAR(36)  PRIMARY KEY,
+    usuario_id  VARCHAR(36),                        -- admin que hizo la acción
+    accion      VARCHAR(200) NOT NULL,              -- "Usuario creado", "Dataset eliminado"
+    detalle     TEXT,                               -- info adicional del cambio
+    entidad_tipo ENUM('USUARIO','DATASET') NOT NULL, -- ← qué tipo de entidad
+    entidad_id  VARCHAR(36)  NOT NULL,              -- ← ID del objeto afectado
+    fecha       DATETIME     NOT NULL,
+    FOREIGN KEY (usuario_id) REFERENCES Users(id)
 );
 
 

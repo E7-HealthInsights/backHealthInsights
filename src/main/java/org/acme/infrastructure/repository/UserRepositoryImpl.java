@@ -75,6 +75,7 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase
         entity.setName(user.getName());
         entity.setLastName(user.getLastName());
         entity.setStatus(user.isStatus());
+        entity.setModifiedBy(user.getModifiedBy());
         if (user.getRole() != null) {
             entity.setRole(em.getReference(RoleEntity.class, user.getRole().getId()));
         }

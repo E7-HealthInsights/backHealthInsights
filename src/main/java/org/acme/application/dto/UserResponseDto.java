@@ -9,6 +9,7 @@ public class UserResponseDto {
     private String email;
     private String role;   //solo nombre, no todo el objeto
     private boolean status;
+    private String modifiedBy;
 
     public UUID getId() {
         return id;
@@ -56,5 +57,13 @@ public class UserResponseDto {
 
     public void setStatus(boolean status) {
         this.status = status;
+    }
+
+    public String getModifiedBy() {
+        return modifiedBy;
+    }
+
+    public void setModifiedBy(String modifiedBy) {
+        this.modifiedBy = modifiedBy;
     }
 }
