@@ -14,6 +14,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.application.dto.CreateUserDto;
+import org.acme.application.dto.DeactivateUserDto;
 import org.acme.application.dto.UpdateUserDto;
 import org.acme.application.dto.UserResponseDto;
 import org.acme.application.usecase.CreateUserUseCase;
@@ -113,9 +114,9 @@ public class UserResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed("ADMIN")
-    public Response deactivateUser(@PathParam("id") UUID id) {
+    public Response deactivateUser(@PathParam("id") UUID id, DeactivateUserDto deactivateUserDto) {
         try {
-            deactivateUserUseCase.execute(id);
+            deactivateUserUseCase.execute(id, deactivateUserDto);
             return Response.noContent().build();
 
         } catch (UserNotFoundException e) {
