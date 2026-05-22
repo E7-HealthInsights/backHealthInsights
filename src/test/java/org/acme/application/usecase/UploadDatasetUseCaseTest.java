@@ -1,13 +1,17 @@
 package org.acme.application.usecase;
 
+import jakarta.persistence.EntityManager;
 import org.acme.application.dto.ColumnDefinitionDto;
 import org.acme.application.dto.UploadDatasetDto;
 import org.acme.domain.exception.TableAlreadyExistsException;
 import org.acme.domain.models.Dataset;
 import org.acme.domain.models.Metrica;
+import org.acme.domain.models.Role;
+import org.acme.domain.models.User;
 import org.acme.domain.repository.DatasetRepository;
 import org.acme.domain.repository.MetricaRepository;
 import org.acme.infrastructure.csv.CsvIngestService;
+import org.acme.infrastructure.security.AuthContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +30,8 @@ class UploadDatasetUseCaseTest {
     private DatasetRepository  datasetRepository;
     private MetricaRepository  metricaRepository;
     private CsvIngestService   csvIngestService;
+    private AuthContext        authContext;
+    private EntityManager      em;
     private UploadDatasetUseCase useCase;
 
     @BeforeEach
@@ -33,6 +39,13 @@ class UploadDatasetUseCaseTest {
         datasetRepository = mock(DatasetRepository.class);
         metricaRepository = mock(MetricaRepository.class);
         csvIngestService  = mock(CsvIngestService.class);
+        authContext       = mock(AuthContext.class);
+        em                = mock(EntityManager.class);
+
+        Role role = new Role((byte) 1, "ADMIN");
+        User adminUser = new User(UUID.randomUUID(), "Admin", "Test", "admin@test.com", role, true, "firebase-admin");
+        when(authContext.getUser()).thenReturn(adminUser);
+        doNothing().when(em).flush();
 
         // Por defecto: la tabla no existe y save devuelve lo que recibe
         when(datasetRepository.existsByNombreTabla(anyString())).thenReturn(false);
@@ -41,7 +54,7 @@ class UploadDatasetUseCaseTest {
         doNothing().when(csvIngestService)
                 .crearTablaEInsertarDatos(anyString(), anyList(), any());
 
-        useCase = new UploadDatasetUseCase(datasetRepository, metricaRepository, csvIngestService);
+        useCase = new UploadDatasetUseCase(datasetRepository, metricaRepository, csvIngestService, authContext, em);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

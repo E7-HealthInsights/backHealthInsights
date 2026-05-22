@@ -10,7 +10,6 @@ import org.acme.domain.exception.TableAlreadyExistsException;
 import org.acme.domain.models.Dataset;
 import org.acme.domain.models.Metrica;
 import org.acme.domain.repository.DatasetRepository;
-import org.acme.domain.repository.LogActividadRepository;
 import org.acme.domain.repository.MetricaRepository;
 import org.acme.infrastructure.csv.CsvIngestService;
 import org.acme.infrastructure.security.AuthContext;
@@ -33,25 +32,22 @@ public class UploadDatasetUseCase {
     private final DatasetRepository datasetRepository;
     private final MetricaRepository metricaRepository;
     private final CsvIngestService csvIngestService;
-    private final LogActividadRepository logActividadRepository;
     private final AuthContext authContext;
-
-    @Inject
-    EntityManager em;
+    private final EntityManager em;
 
     @Inject
     public UploadDatasetUseCase(
             DatasetRepository datasetRepository,
             MetricaRepository metricaRepository,
             CsvIngestService csvIngestService,
-            LogActividadRepository logActividadRepository,
-            AuthContext authContext
+            AuthContext authContext,
+            EntityManager em
     ) {
         this.datasetRepository = datasetRepository;
         this.metricaRepository = metricaRepository;
         this.csvIngestService  = csvIngestService;
-        this.logActividadRepository = logActividadRepository;
         this.authContext = authContext;
+        this.em = em;
     }
 
     @Transactional
