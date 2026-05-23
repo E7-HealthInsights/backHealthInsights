@@ -9,6 +9,13 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "Proyeccion")
+@NamedEntityGraph(
+    name = "Proyeccion.withUsuario",
+    attributeNodes = {
+        @NamedAttributeNode("usuario")
+    }
+)
+
 public class ProyeccionEntity {
 
     @Id

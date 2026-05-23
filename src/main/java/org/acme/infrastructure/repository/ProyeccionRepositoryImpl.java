@@ -12,6 +12,7 @@ import org.acme.infrastructure.entities.UserEntity;
 import org.acme.infrastructure.mapper.ProyeccionMapper;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -42,6 +43,30 @@ public class ProyeccionRepositoryImpl
                 .stream()
                 .map(ProyeccionMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Proyeccion> findProyeccionById(UUID id) {
+        return em.createQuery(
+                "SELECT p FROM ProyeccionEntity p WHERE p.id = :id",
+                ProyeccionEntity.class)
+                .setParameter("id", id)
+                .setHint("jakarta.persistence.fetchgraph",
+                        em.getEntityGraph("Proyeccion.withUsuario"))
+                .getResultStream()
+                .map(ProyeccionMapper::toDomain)
+                .findFirst();
+    }
+
+    @Override
+    @Transactional
+    public Proyeccion update(Proyeccion proyeccion) {
+        ProyeccionEntity entity = em.find(ProyeccionEntity.class, proyeccion.getId());
+        entity.setTitulo(proyeccion.getTitulo());
+        entity.setDescripcion(proyeccion.getDescripcion());
+        entity.setQuery(proyeccion.getParametros());
+        entity.setFechaActualizacion(proyeccion.getFechaActualizacion());
+        return ProyeccionMapper.toDomain(entity);
     }
 
     @Override

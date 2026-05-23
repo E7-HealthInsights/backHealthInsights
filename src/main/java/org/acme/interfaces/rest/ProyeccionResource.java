@@ -8,8 +8,13 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.application.dto.ErrorResponseDto;
 import org.acme.application.dto.GuardarProyeccionDto;
+import org.acme.application.usecase.ActualizarProyeccionUseCase;
+import org.acme.application.usecase.EliminarProyeccionUseCase;
 import org.acme.application.usecase.GetProyeccionesUseCase;
 import org.acme.application.usecase.GuardarProyeccionUseCase;
+import org.acme.domain.exception.ProyeccionNotFoundException;
+
+import io.quarkus.security.UnauthorizedException;
 
 import java.util.UUID;
 
@@ -20,6 +25,18 @@ public class ProyeccionResource {
 
     @Inject GuardarProyeccionUseCase guardarProyeccionUseCase;
     @Inject GetProyeccionesUseCase getProyeccionesUseCase;
+    @Inject ActualizarProyeccionUseCase actualizarProyeccionUseCase;
+    @Inject EliminarProyeccionUseCase eliminarProyeccionUseCase;
+
+    public ProyeccionResource(GuardarProyeccionUseCase guardarProyeccionUseCase,
+                              GetProyeccionesUseCase getProyeccionesUseCase,
+                              ActualizarProyeccionUseCase actualizarProyeccionUseCase,
+                              EliminarProyeccionUseCase eliminarProyeccionUseCase) {
+        this.guardarProyeccionUseCase = guardarProyeccionUseCase;
+        this.getProyeccionesUseCase = getProyeccionesUseCase;
+        this.actualizarProyeccionUseCase = actualizarProyeccionUseCase;
+        this.eliminarProyeccionUseCase = eliminarProyeccionUseCase;
+    }
 
     // Guarda una proyección calculada por el frontend
     @POST
@@ -43,18 +60,36 @@ public class ProyeccionResource {
         return Response.ok(getProyeccionesUseCase.execute()).build();
     }
 
+    @PUT
+    @Path("/{id}")
+    @RolesAllowed({"DIRECTOR_GENERAL", "DIRECTOR_FINANZAS", "DIRECTOR_MERCADOTECNIA"})
+    public Response actualizar(@PathParam("id") UUID id,
+                            @Valid GuardarProyeccionDto dto) {
+        try {
+            return Response.ok(actualizarProyeccionUseCase.execute(id, dto)).build();
+        } catch (ProyeccionNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponseDto(e.getMessage())).build();
+        } catch (UnauthorizedException e) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorResponseDto(e.getMessage())).build();
+        }
+    }
+
     // Elimina una proyección guardada
     @DELETE
     @Path("/{id}")
     @RolesAllowed({"DIRECTOR_GENERAL", "DIRECTOR_FINANZAS", "DIRECTOR_MERCADOTECNIA"})
     public Response eliminar(@PathParam("id") UUID id) {
         try {
-            // TODO: agregar verificación de ownership
+            eliminarProyeccionUseCase.execute(id);
             return Response.noContent().build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(new ErrorResponseDto("Error eliminando proyección"))
-                    .build();
+        } catch (ProyeccionNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponseDto(e.getMessage())).build();
+        } catch (UnauthorizedException e) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorResponseDto(e.getMessage())).build();
         }
     }
 }
