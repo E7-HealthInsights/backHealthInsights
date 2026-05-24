@@ -28,6 +28,8 @@ public class CreateUserDto {
     @Min(value = 1, message = "El rol debe ser válido")
     private Byte roleId;
 
+    private String justification;
+
     public String getName() {
         return name;
     }
@@ -66,5 +68,13 @@ public class CreateUserDto {
 
     public void setRoleId(Byte roleId) {
         this.roleId = roleId;
+    }
+
+    public String getJustification() {
+        return justification;
+    }
+
+    public void setJustification(String justification) {
+        this.justification = justification;
     }
 }
