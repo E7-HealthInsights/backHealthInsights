@@ -40,6 +40,9 @@ public class DatasetEntity {
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
 
+    @Column(name = "modified_by", length = 36)
+    private String modifiedBy;
+
     // Relación con métricas — se carga bajo demanda
     @OneToMany(mappedBy = "dataset", fetch = FetchType.LAZY)
     private List<MetricaEntity> metricas;
@@ -70,6 +73,9 @@ public class DatasetEntity {
 
     public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
+
+    public String getModifiedBy() { return modifiedBy; }
+    public void setModifiedBy(String modifiedBy) { this.modifiedBy = modifiedBy; }
 
     public List<MetricaEntity> getMetricas() { return metricas; }
     public void setMetricas(List<MetricaEntity> metricas) { this.metricas = metricas; }

@@ -75,9 +75,60 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepositoryBase
         entity.setName(user.getName());
         entity.setLastName(user.getLastName());
         entity.setStatus(user.isStatus());
+        entity.setModifiedBy(user.getModifiedBy());
         if (user.getRole() != null) {
             entity.setRole(em.getReference(RoleEntity.class, user.getRole().getId()));
         }
         return user;
+    }
+
+    @Override
+    public List<User> findPaginated(int page, int size, String search, Boolean status) {
+        int offset = (page - 1) * size;
+        String like = search != null && !search.isBlank()
+                ? "%" + search.toLowerCase() + "%" : null;
+
+        String sql =
+            "SELECT u FROM UserEntity u " +
+            "JOIN FETCH u.role " +
+            "WHERE u.status = :status " +
+            (like != null ?
+            "AND (LOWER(u.name) LIKE :like " +
+            "OR LOWER(u.lastName) LIKE :like " +
+            "OR LOWER(u.email) LIKE :like) " : "") +
+            "ORDER BY u.name ASC";
+
+        var query = em.createQuery(sql, UserEntity.class)
+                .setParameter("status", status)
+                .setFirstResult(offset)
+                .setMaxResults(size);
+
+        if (like != null) query.setParameter("like", like);
+
+        return query.getResultList()
+                .stream()
+                .map(UserMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public long countUsers(String search, Boolean status) {
+        String like = search != null && !search.isBlank()
+                ? "%" + search.toLowerCase() + "%" : null;
+
+        String sql =
+            "SELECT COUNT(u) FROM UserEntity u " +
+            "WHERE u.status = :status " +
+            (like != null ?
+            "AND (LOWER(u.name) LIKE :like " +
+            "OR LOWER(u.lastName) LIKE :like " +
+            "OR LOWER(u.email) LIKE :like) " : "");
+
+        var query = em.createQuery(sql, Long.class)
+                .setParameter("status", status);
+
+        if (like != null) query.setParameter("like", like);
+
+        return query.getSingleResult();
     }
 }

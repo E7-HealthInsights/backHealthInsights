@@ -2,6 +2,7 @@ package org.acme.application.usecase;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.acme.application.dto.ColumnDefinitionDto;
 import org.acme.application.dto.UploadDatasetDto;
@@ -11,6 +12,7 @@ import org.acme.domain.models.Metrica;
 import org.acme.domain.repository.DatasetRepository;
 import org.acme.domain.repository.MetricaRepository;
 import org.acme.infrastructure.csv.CsvIngestService;
+import org.acme.infrastructure.security.AuthContext;
 import org.jboss.logging.Logger;
 
 import java.io.ByteArrayInputStream;
@@ -30,16 +32,22 @@ public class UploadDatasetUseCase {
     private final DatasetRepository datasetRepository;
     private final MetricaRepository metricaRepository;
     private final CsvIngestService csvIngestService;
+    private final AuthContext authContext;
+    private final EntityManager em;
 
     @Inject
     public UploadDatasetUseCase(
             DatasetRepository datasetRepository,
             MetricaRepository metricaRepository,
-            CsvIngestService csvIngestService
+            CsvIngestService csvIngestService,
+            AuthContext authContext,
+            EntityManager em
     ) {
         this.datasetRepository = datasetRepository;
         this.metricaRepository = metricaRepository;
         this.csvIngestService  = csvIngestService;
+        this.authContext = authContext;
+        this.em = em;
     }
 
     @Transactional
@@ -65,6 +73,7 @@ public class UploadDatasetUseCase {
         dataset.setArchivoCsv(dto.getArchivoNombre());
         dataset.setEstado(true);
         dataset.setFechaActualizacion(LocalDateTime.now());
+        dataset.setModifiedBy(authContext.getUser().getId().toString());
 
         Dataset savedDataset = datasetRepository.save(dataset);
         LOG.infof("Dataset '%s' persistido con id=%s, tabla='%s'",
@@ -98,6 +107,22 @@ public class UploadDatasetUseCase {
             LOG.errorf("Error al cargar datos en tabla '%s': %s", nombreTabla, e.getMessage());
             throw new RuntimeException(
                     "Error al procesar el archivo CSV. Por favor intenta de nuevo.", e);
+        }
+
+        // Fuerza flush → Dataset INSERT llega a MySQL → trigger dispara → LogActividad creado
+        em.flush();
+
+        // Actualiza dentro de la MISMA transacción → sin lock contention
+        if (dto.getJustification() != null && !dto.getJustification().isBlank()) {
+            em.createNativeQuery(
+                "UPDATE LogActividad " +
+                "SET detalle = :detalle " +
+                "WHERE entidad_id = :entidadId " +
+                "ORDER BY fecha DESC LIMIT 1"
+            )
+            .setParameter("detalle", dto.getJustification())
+            .setParameter("entidadId", savedDataset.getId().toString())
+            .executeUpdate();
         }
 
         return savedDataset;

@@ -42,6 +42,9 @@ public class UserEntity {
     @Column(name = "provider_id", nullable = false, unique = true)
     private String providerId;
 
+    @Column(name = "modified_by", length = 36)
+    private String modifiedBy;
+
     public UUID getId() {
         return id;
     }
@@ -96,5 +99,13 @@ public class UserEntity {
 
     public void setProviderId(String providerId) {
         this.providerId = providerId;
+    }
+
+    public String getModifiedBy() {
+        return modifiedBy;
+    }
+
+    public void setModifiedBy(String modifiedBy) {
+        this.modifiedBy = modifiedBy;
     }
 }

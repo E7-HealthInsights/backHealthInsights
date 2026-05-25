@@ -10,6 +10,7 @@ public class User {
     private Role role;
     private boolean status;
     private String providerId;
+    private String modifiedBy;
     //lastConnection?
 
 
@@ -80,5 +81,13 @@ public class User {
 
     public void setProviderId(String providerId) {
         this.providerId = providerId;
+    }
+
+    public String getModifiedBy() {
+        return modifiedBy;
+    }
+
+    public void setModifiedBy(String modifiedBy) {
+        this.modifiedBy = modifiedBy;
     }
 }

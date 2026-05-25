@@ -35,7 +35,13 @@ public class CreateWidgetUseCase {
         widget.setUsuario(authContext.getUser());
         widget.setTipo(tipoWidget);
         widget.setRolId(null);   //pues es personalizado, no asociado al rol
+        widget.setTipoSemantico(emptyToNull(dto.getTipoSemantico()));
+        widget.setNivelGeografico(emptyToNull(dto.getNivelGeografico()));
 
         return widgetRepository.create(widget);
+    }
+
+    private static String emptyToNull(String s) {
+        return (s == null || s.isBlank()) ? null : s;
     }
 }

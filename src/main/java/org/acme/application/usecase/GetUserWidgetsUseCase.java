@@ -52,6 +52,8 @@ public class GetUserWidgetsUseCase {
 
         String tipo = widget.getTipo() != null ? widget.getTipo().getNombre() : "STAT";
         dto.setTipo(tipo);
+        dto.setTipoSemantico(widget.getTipoSemantico());
+        dto.setNivelGeografico(widget.getNivelGeografico());
 
         // 1 — Ejecuta la query SIEMPRE primero
         Map<String, Object> data = new java.util.HashMap<>(
