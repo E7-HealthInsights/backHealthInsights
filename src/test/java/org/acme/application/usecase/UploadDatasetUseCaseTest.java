@@ -26,7 +26,7 @@ class UploadDatasetUseCaseTest {
     private DatasetRepository datasetRepository;
     private MetricaRepository metricaRepository;
     private GcsStorageService gcsStorageService;
-    private Emitter<byte[]>   emitter;
+    private Emitter<String>   emitter;
     private UploadDatasetUseCase useCase;
 
     @BeforeEach
@@ -35,7 +35,7 @@ class UploadDatasetUseCaseTest {
         datasetRepository = mock(DatasetRepository.class);
         metricaRepository = mock(MetricaRepository.class);
         gcsStorageService = mock(GcsStorageService.class);
-        emitter           = mock(Emitter.class);
+        emitter = mock(Emitter.class);
 
         // Por defecto: la tabla no existe, save devuelve lo que recibe
         when(datasetRepository.existsByNombreTabla(anyString())).thenReturn(false);
@@ -158,7 +158,7 @@ class UploadDatasetUseCaseTest {
         useCase.execute(dto);
 
         // Verifica que se publicó exactamente un mensaje al topic
-        verify(emitter, times(1)).send(any(byte[].class));
+        verify(emitter, times(1)).send(any(String.class));
     }
 
     // ── Tests: slugify ────────────────────────────────────────────────────────
@@ -196,7 +196,7 @@ class UploadDatasetUseCaseTest {
         verify(datasetRepository, never()).save(any());
         verify(metricaRepository, never()).saveAll(anyList());
         verify(gcsStorageService, never()).upload(any(), any());
-        verify(emitter, never()).send(any(byte[].class));
+        verify(emitter, never()).send(any(String.class));
     }
 
     @Test
@@ -221,6 +221,6 @@ class UploadDatasetUseCaseTest {
         assertThrows(RuntimeException.class, () -> useCase.execute(dto));
         // Si GCS falla, no debe persistirse el dataset ni publicarse el evento
         verify(datasetRepository, never()).save(any());
-        verify(emitter, never()).send(any(byte[].class));
+        verify(emitter, never()).send(any(String.class));
     }
 }
