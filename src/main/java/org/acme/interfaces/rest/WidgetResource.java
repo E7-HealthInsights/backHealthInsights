@@ -34,6 +34,8 @@ public class WidgetResource {
         dto.setTitulo(widget.getTitulo());
         dto.setOrden(widget.getOrden());
         dto.setTipo(widget.getTipo() != null ? widget.getTipo().getNombre() : null);
+        dto.setTipoSemantico(widget.getTipoSemantico());
+        dto.setNivelGeografico(widget.getNivelGeografico());
 
         return Response.status(Response.Status.CREATED)
                 .entity(dto)
