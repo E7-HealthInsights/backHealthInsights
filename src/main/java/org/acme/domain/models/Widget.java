@@ -10,6 +10,8 @@ public class Widget {
     private String query;   // JSON config guardado como String
     private int orden;
     private Byte rolId;
+    private String tipoSemantico;     // porcentaje | conteo | tasa | moneda | indice | texto
+    private String nivelGeografico;   // pais | estado | municipio | colonia | sin_geo
 
     public Widget() {
     }
@@ -78,5 +80,21 @@ public class Widget {
 
     public void setRolId(Byte rolId) {
         this.rolId = rolId;
+    }
+
+    public String getTipoSemantico() {
+        return tipoSemantico;
+    }
+
+    public void setTipoSemantico(String tipoSemantico) {
+        this.tipoSemantico = tipoSemantico;
+    }
+
+    public String getNivelGeografico() {
+        return nivelGeografico;
+    }
+
+    public void setNivelGeografico(String nivelGeografico) {
+        this.nivelGeografico = nivelGeografico;
     }
 }

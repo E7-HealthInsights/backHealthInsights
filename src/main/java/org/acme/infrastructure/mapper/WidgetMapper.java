@@ -13,6 +13,8 @@ public class WidgetMapper {
         widget.setQuery(entity.getQuery());
         widget.setOrden(entity.getOrden());
         widget.setRolId(entity.getRolId());
+        widget.setTipoSemantico(entity.getTipoSemantico());
+        widget.setNivelGeografico(entity.getNivelGeografico());
 
         if(entity.getTipo() != null && Hibernate.isInitialized(entity.getTipo())){
             widget.setTipo(TipoWidgetMapper.toDomain(entity.getTipo()));
@@ -33,6 +35,8 @@ public class WidgetMapper {
         entity.setTipo(widget.getTipo() != null ? TipoWidgetMapper.toEntity(widget.getTipo()) : null);
         entity.setUsuario(widget.getUsuario() != null ? UserMapper.toEntity(widget.getUsuario()) : null);
         entity.setRolId(widget.getRolId());
+        entity.setTipoSemantico(widget.getTipoSemantico());
+        entity.setNivelGeografico(widget.getNivelGeografico());
         return entity;
     }
 

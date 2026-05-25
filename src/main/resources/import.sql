@@ -53,6 +53,8 @@ CREATE TABLE Widget (
                         tipo_id TINYINT,
                         query text,
                         orden int,
+                        tipo_semantico VARCHAR(20) NULL,
+                        nivel_geografico VARCHAR(20) NULL,
 
                         FOREIGN KEY (usuario_id) REFERENCES Users(id),
                         FOREIGN KEY (rol_id) REFERENCES Role(id),
@@ -94,6 +96,21 @@ CREATE TABLE LogActividad (
     entidad_id  VARCHAR(36)  NOT NULL,              -- ← ID del objeto afectado
     fecha       DATETIME     NOT NULL,
     FOREIGN KEY (usuario_id) REFERENCES Users(id)
+);
+
+-- Tabla Marketing_Strategy (estrategias generadas por IA para Director de Mercadotecnia)
+CREATE TABLE Marketing_Strategy (
+                        id VARCHAR(36) PRIMARY KEY,
+                        usuario_id VARCHAR(36) NOT NULL,
+                        creado_en DATETIME NOT NULL,
+                        contexto_extra TEXT NULL,
+                        payload_json LONGTEXT NOT NULL,
+                        estado VARCHAR(20) NOT NULL DEFAULT 'propuesta',
+                        nota_resultado TEXT NULL,
+                        fecha_revision DATETIME NULL,
+                        comentarios_json LONGTEXT NULL,
+
+                        FOREIGN KEY (usuario_id) REFERENCES Users(id)
 );
 
 
@@ -173,50 +190,50 @@ INSERT INTO Tipo_de_Grafica (id, nombre) VALUES (7, 'MULTIBAR');
 -- WIDGETS DEFAULT DIRECTOR FINANZAS (usuario_id = '3')
 -- ================================================
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
     (UUID(), 'Gasto Público de México, 2024', NULL, 1,
      '{\"tabla\": \"f12_idf_mexico_dolares\", \"funcion\": \"MAX\", \"columna\": \"value\", \"filtroCol\": \"_id\", \"filtroVal\": \"1\" }',
-     1, 3);
+     1, 3, 'moneda', 'pais');
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
     (UUID(), 'Gasto Per Cápita, 2024', NULL, 1,
      '{\"tabla\": \"f12_idf_mexico_dolares\", \"funcion\": \"MAX\", \"columna\": \"value\", \"filtroCol\": \"_id\", \"filtroVal\": \"4\" }',
-     2, 3);
+     2, 3, 'moneda', 'pais');
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
     (UUID(), 'Promedio histórico del PIB dedicado al sector salud', NULL, 1,
      '{\"tabla\": \"f4_pib_bancomundial\", \"funcion\": \"AVG\", \"columna\": \"obs_value\" }',
-     3, 3);
+     3, 3, 'porcentaje', 'pais');
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
     (UUID(), 'Evolución gasto % PIB 2000–2024', NULL, 3,
      '{"tabla":"f4_pib_bancomundial","colX":"time_period","colY":"obs_value","funcion":"AVG","groupBy":"time_period"}',
-     4, 3);
+     4, 3, 'porcentaje', 'pais');
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Cobertura pública vs privada (evolución)', NULL, 6,
  '{"tabla":"f11_health_coverage_oecd_pt","colX":"time_period","colY":"obs_value","colSerie":"insurance_type","funcion":"MAX"}',
- 5, 3);
+ 5, 3, 'porcentaje', 'pais');
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Gasto en Diabetes vs otros países', NULL, 6,
  '{"tabla":"f10_gasto_diabetes","colX":"ao","colY":"gastomillones_de_dolares","colSerie":"pais","funcion":"MAX"}',
- 6, 3);
+ 6, 3, 'moneda', 'pais');
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Distribucion de cobertura por tipo de seguro', NULL, 4,
  '{"tabla":"f11_health_coverage_oecd_pt","colLabel":"insurance_type","colValue":"obs_value","funcion":"AVG"}',
- 7, 3);
+ 7, 3, 'porcentaje', 'pais');
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
     (UUID(), 'Gasto per cápita en diabetes evolución', NULL, 2,
      '{"tabla":"f12_idf_mexico_dolares","colX":"year","colY":"value","funcion":"MAX","groupBy":"year", \"filtroCol\": \"indicator\", \"filtroVal\": \"Diabetes-related health expenditure per person (USD)\"}',
-     8, 3);
+     8, 3, 'moneda', 'pais');
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Gasto vs Casos de diabetes (índice 2000=100)', NULL, 6,
  '{"tabla":"f12_idf_gastovscasos","colX":"ano","colY":"valor","colSerie":"serie","funcion":"MAX"}',
- 9, 3);
+ 9, 3, 'indice', 'pais');
 
 -- ================================================
 -- WIDGETS DEFAULT DIRECTOR MERCADOTECNIA (rol_id = 4)
@@ -224,111 +241,111 @@ INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
 -- ================================================
 
 -- HI-504: StatCard con no diagnosticados (vista calcula 100 - cobertura)
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), '% Personas con diabetes no diagnosticadas', NULL, 1,
  '{"tabla":"v_f8_no_diagnosticados_actual","funcion":"MAX","columna":"porcentaje_no_diagnosticados"}',
- 1, 4);
+ 1, 4, 'porcentaje', 'pais');
 
 -- HI-505: StatCard con estado prioritario (nombre del estado top en detecciones)
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Estado prioritario por detecciones', NULL, 1,
  '{"tabla":"v_f5_estado_prioritario_actual","funcion":"MAX","columna":"nombre_estado"}',
- 2, 4);
+ 2, 4, 'texto', 'estado');
 
 -- HI-506: StatCard con % población con diabetes (prevalencia age-standardized 2024)
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), '% Población con diabetes (2024)', NULL, 1,
  '{"tabla":"f12_idf_mexico_porcentajes","funcion":"MAX","columna":"value","filtroCol":"indicator","filtroVal":"Age-standardised prevalence of diabetes (%)","filtroCol2":"year","filtroVal2":"2024"}',
- 3, 4);
+ 3, 4, 'porcentaje', 'pais');
 
 -- HI-507: Barras edad y sexo vs diabetes (DALYs Rate por edad, 3 series de sexo, año 2021)
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Carga de diabetes (DALYs) por edad y sexo', NULL, 6,
  '{"tabla":"f7_burden_diabetes","colX":"age_group","colY":"value","colSerie":"sex","funcion":"MAX","filtroCol":"measure_name","filtroVal":"Disability-Adjusted Life Years (DALYs)","filtroCol2":"year","filtroVal2":"2021"}',
- 4, 4);
+ 4, 4, 'tasa', 'sin_geo');
 
 -- HI-508: Línea detecciones por año (SUM de todos los estados, sin filtros)
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Detecciones de diabetes por año', NULL, 2,
  '{"tabla":"f5_diabetes_delegaciones","colX":"ano","colY":"detecciones","funcion":"SUM","groupBy":"ano"}',
- 5, 4);
+ 5, 4, 'conteo', 'pais');
 
 -- HI-509: Barras obesidad y sobrepeso por edad (multiseries, ambos sexos, año 2022)
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Obesidad y sobrepeso por edad', NULL, 6,
  '{"tabla":"f9_obesidad_paho","colX":"age_group","colY":"value","colSerie":"indicator_name","funcion":"MAX","filtroCol":"sex","filtroVal":"Both sexes","filtroCol2":"year","filtroVal2":"2022"}',
- 6, 4);
+ 6, 4, 'porcentaje', 'sin_geo');
 
 -- HI-510: Mapa de calor con carencias sociales por municipio (TABLE con 1 fila por municipio)
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Carencias sociales por municipio', NULL, 5,
  '{"tabla":"v_f2_carencias_por_municipio","columnas":"municipio, rezago_educativo, acceso_salud, acceso_seguridad_social, calidad_vivienda, servicios_basicos, acceso_alimentacion","limite":20}',
- 7, 4);
+ 7, 4, 'porcentaje', 'municipio');
 
 -- HI-511: Tabla top 5 estados por detecciones (vista pre-ordenada)
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Top 5 estados con más detecciones', NULL, 5,
  '{"tabla":"v_f5_top_estados_actual","columnas":"estado, detecciones_total","limite":5}',
- 8, 4);
+ 8, 4, 'conteo', 'estado');
 
 -- ================================================
 -- WIDGETS DEFAULT DIRECTOR GENERAL (usuario_id = '2')
 -- ================================================
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
     (UUID(), 'Casos de diabetes en México', NULL, 1,
      '{\"tabla\": \"fuente1_datos_casos_ssa\", \"funcion\": \"MAX\", \"columna\": \"Valor\", \"filtroCol\": \"_id\", \"filtroVal\": \"36\" }',
-     1, 2);
+     1, 2, 'conteo', 'pais');
 
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
     (UUID(), 'Tasa de mortalidad por diabetes (100 mil habitantes)', NULL, 1,
      '{\"tabla\": \"fuente1_datos_casos_ssa\", \"funcion\": \"MAX\", \"columna\": \"Valor\", \"filtroCol\": \"_id\", \"filtroVal\": \"108\" }',
-     2, 2);
+     2, 2, 'tasa', 'pais');
 
 -- StatCard personas no diagnosticadas 2024
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Personas con diabetes no diagnosticadas (2024)', NULL, 1,
  '{"tabla":"f12_idf_mexico_limpio","funcion":"MAX","columna":"value","filtroCol":"indicator","filtroVal":"People with undiagnosed diabetes (1000s)","filtroCol2":"year","filtroVal2":"2024"}',
- 3, 2);
+ 3, 2, 'conteo', 'pais');
 
 -- Línea Prevalencia 1990-2022
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Prevalencia de diabetes en México (1990-2022)', NULL, 2,
  '{"tabla":"f8_prevalence_and_treatment_diabetes","colX":"year","colY":"value","funcion":"MAX","groupBy":"year","filtroCol":"indicator_name_en","filtroVal":"Prevalence of diabetes in adults aged 18+ years (FBG ≥7.0 mmol/L or HbA1c ≥6.5% or currently taking medication for diabetes) (crude estimates)","filtroCol2":"sex_en","filtroVal2":"Both sexes"}',
- 4, 2);
+ 4, 2, 'porcentaje', 'pais');
 
 -- Heatmap defunciones por estado y año
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Defunciones por diabetes según estado y año', NULL, 5,
  '{"tabla":"v_f3_defunciones_heatmap","columnas":"ent_regis, anio_ocur, defunciones","limite":500}',
- 10, 2);
+ 10, 2, 'conteo', 'estado');
 
 -- Multibar tasa de muertes por edad y sexo
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Tasa de mortalidad por diabetes según edad y sexo', NULL, 7,
  '{"tabla":"f7_burden_diabetes","colX":"age_group","colY":"value","colSerie":"sex","funcion":"MAX","filtroCol":"measure_name_en","filtroVal":"Deaths","filtroCol2":"metric_name_en","filtroVal2":"Rate"}',
- 5, 2);
+ 5, 2, 'tasa', 'sin_geo');
 
 -- Dona %PIB destinado a salud vs resto (2024)
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), '% PIB destinado a salud (2024)', NULL, 4,
  '{"tabla":"v_pib_dona_2024","colLabel":"categoria","colValue":"valor","funcion":"MAX"}',
- 6, 2);
+ 6, 2, 'porcentaje', 'pais');
 
 -- Línea DALYs / carga de la enfermedad
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Carga de enfermedad por diabetes (DALYs)', NULL, 2,
  '{"tabla":"f7_burden_diabetes","colX":"year","colY":"value","funcion":"MAX","groupBy":"year","filtroCol":"measure_name_en","filtroVal":"Disability-Adjusted Life Years (DALYs)","filtroCol2":"age_group","filtroVal2":"All ages"}',
- 7, 2);
+ 7, 2, 'tasa', 'pais');
 
 -- Línea personas con diabetes por año
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Personas con diabetes en México por año', NULL, 2,
  '{"tabla":"fuente1_datos_casos_ssa","colX":"ao","colY":"valor","funcion":"MAX","groupBy":"ao","filtroCol":"indicador","filtroVal":"Casos (millones)"}',
- 8, 2);
+ 8, 2, 'conteo', 'pais');
 
 -- Línea muertes por año
-INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
+INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id, tipo_semantico, nivel_geografico) VALUES
 (UUID(), 'Muertes por diabetes en México por año', NULL, 2,
  '{"tabla":"fuente1_datos_casos_ssa","colX":"ao","colY":"valor","funcion":"MAX","groupBy":"ao","filtroCol":"indicador","filtroVal":"Muertes(miles)"}',
- 9, 2);
+ 9, 2, 'conteo', 'pais');
