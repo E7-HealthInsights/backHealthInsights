@@ -63,4 +63,66 @@ public class LogActividadRepositoryImpl implements LogActividadRepository, Panac
                 .setParameter("id", logId)
                 .executeUpdate();
     }
+
+    @Override
+    public List<LogActividad> findPaginated(int page, int size, String search) {
+        int offset = (page - 1) * size;
+        String like = search != null && !search.isBlank()
+            ? "%" + search.toLowerCase() + "%"
+            : null;
+
+        var query = em.createNativeQuery(
+                "SELECT l.id, l.accion, l.detalle, l.entidad_tipo, " +
+                "l.entidad_id, l.fecha, " +
+                "CONCAT(u.name, ' ', u.last_name) AS admin_nombre " +
+                "FROM LogActividad l " +
+                "LEFT JOIN Users u ON u.id = l.usuario_id " +
+                (like != null ? "WHERE LOWER(l.accion) LIKE :like OR LOWER(l.detalle) LIKE :like OR LOWER(CONCAT(u.name, ' ', u.last_name)) LIKE :like " : "") +
+                "ORDER BY l.fecha DESC " +
+                "LIMIT :size OFFSET :offset"
+        )
+        .setParameter("size", size)
+        .setParameter("offset", offset);
+
+        if (like != null) {
+            query.setParameter("like", like);
+        }
+
+        List<Object[]> rows = query.getResultList();
+
+        return rows.stream().map(row -> {
+            LogActividad log = new LogActividad();
+            log.setId(UUID.fromString((String) row[0]));
+            log.setAccion((String) row[1]);
+            log.setDetalle((String) row[2]);
+            log.setEntidadTipo(EntidadTipo.valueOf((String) row[3]));
+            log.setEntidadId((String) row[4]);
+            Object fechaRaw = row[5];
+            log.setFecha(fechaRaw instanceof java.sql.Timestamp ts
+                    ? ts.toLocalDateTime()
+                    : (LocalDateTime) fechaRaw);
+            log.setAdminNombre((String) row[6]);
+            return log;
+        }).toList();
+    }
+
+    @Override
+    public long countAll(String search) {
+        String like = search != null && !search.isBlank()
+                ? "%" + search.toLowerCase() + "%"
+                : null;
+
+        String sql =
+            "SELECT COUNT(*) FROM LogActividad l " +
+            "LEFT JOIN Users u ON u.id = l.usuario_id " +
+            (like != null ?
+            "WHERE LOWER(l.accion) LIKE :like " +
+            "OR LOWER(l.detalle) LIKE :like " +
+            "OR LOWER(CONCAT(u.name, ' ', u.last_name)) LIKE :like " : "");
+
+        var query = em.createNativeQuery(sql);
+        if (like != null) query.setParameter("like", like);
+
+        return ((Number) query.getSingleResult()).longValue();
+    }
 }
