@@ -73,6 +73,17 @@ CREATE TABLE Proyeccion (
 );
 
 
+-- Tabla Reporte
+CREATE TABLE Reporte (
+    id             VARCHAR(36)  PRIMARY KEY,
+    usuario_id     VARCHAR(36)  NOT NULL,
+    titulo         VARCHAR(300) NOT NULL,
+    tipo           VARCHAR(50)  NOT NULL,
+    referencia_id  VARCHAR(100),
+    fecha_creacion DATETIME     NOT NULL,
+    FOREIGN KEY (usuario_id) REFERENCES Users(id)
+);
+
 --Tabla Log de actividad
 CREATE TABLE LogActividad (
     id          VARCHAR(36)  PRIMARY KEY,
