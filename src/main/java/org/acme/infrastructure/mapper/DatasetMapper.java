@@ -14,7 +14,8 @@ public class DatasetMapper {
         dataset.setFuente(entity.getFuente());
         dataset.setArchivoCsv(entity.getArchivoCsv());
         dataset.setLink(entity.getLink());
-        dataset.setEstado(entity.isEstado());
+        dataset.setEstado(entity.getEstado());
+        dataset.setErrorMensaje(entity.getErrorMensaje());
         dataset.setFechaActualizacion(entity.getFechaActualizacion());
         return dataset;
     }
@@ -28,7 +29,8 @@ public class DatasetMapper {
         entity.setFuente(dataset.getFuente());
         entity.setArchivoCsv(dataset.getArchivoCsv());
         entity.setLink(dataset.getLink());
-        entity.setEstado(dataset.isEstado());
+        entity.setEstado(dataset.getEstado());
+        entity.setErrorMensaje(dataset.getErrorMensaje());
         entity.setFechaActualizacion(dataset.getFechaActualizacion());
         return entity;
     }

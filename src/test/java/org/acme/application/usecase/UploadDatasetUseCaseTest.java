@@ -4,15 +4,15 @@ import org.acme.application.dto.ColumnDefinitionDto;
 import org.acme.application.dto.UploadDatasetDto;
 import org.acme.domain.exception.TableAlreadyExistsException;
 import org.acme.domain.models.Dataset;
+import org.acme.domain.models.DatasetEstado;
 import org.acme.domain.models.Metrica;
 import org.acme.domain.repository.DatasetRepository;
 import org.acme.domain.repository.MetricaRepository;
-import org.acme.infrastructure.csv.CsvIngestService;
+import org.acme.infrastructure.storage.GcsStorageService;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -23,25 +23,35 @@ import static org.mockito.Mockito.*;
 
 class UploadDatasetUseCaseTest {
 
-    private DatasetRepository  datasetRepository;
-    private MetricaRepository  metricaRepository;
-    private CsvIngestService   csvIngestService;
+    private DatasetRepository datasetRepository;
+    private MetricaRepository metricaRepository;
+    private GcsStorageService gcsStorageService;
+    private Emitter<byte[]>   emitter;
     private UploadDatasetUseCase useCase;
 
     @BeforeEach
-    void setUp() throws Exception {
+    @SuppressWarnings("unchecked")
+    void setUp() {
         datasetRepository = mock(DatasetRepository.class);
         metricaRepository = mock(MetricaRepository.class);
-        csvIngestService  = mock(CsvIngestService.class);
+        gcsStorageService = mock(GcsStorageService.class);
+        emitter           = mock(Emitter.class);
 
-        // Por defecto: la tabla no existe y save devuelve lo que recibe
+        // Por defecto: la tabla no existe, save devuelve lo que recibe
         when(datasetRepository.existsByNombreTabla(anyString())).thenReturn(false);
         when(datasetRepository.save(any(Dataset.class))).thenAnswer(inv -> inv.getArgument(0));
         doNothing().when(metricaRepository).saveAll(anyList());
-        doNothing().when(csvIngestService)
-                .crearTablaEInsertarDatos(anyString(), anyList(), any());
 
-        useCase = new UploadDatasetUseCase(datasetRepository, metricaRepository, csvIngestService);
+        // GCS upload devuelve una URI de ejemplo
+        when(gcsStorageService.upload(anyString(), any(byte[].class)))
+                .thenReturn("gs://test-bucket/datasets/test.csv");
+
+        useCase = new UploadDatasetUseCase(
+                datasetRepository,
+                metricaRepository,
+                gcsStorageService,
+                emitter
+        );
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -83,22 +93,21 @@ class UploadDatasetUseCaseTest {
         assertEquals("ensanut_2024",    result.getNombreTabla());
         assertEquals("INEGI",           result.getFuente());
         assertEquals("ensanut_2024.csv",result.getArchivoCsv());
-        assertTrue(result.isEstado());
+        assertEquals(DatasetEstado.PENDING, result.getEstado());
         assertNotNull(result.getFechaActualizacion());
     }
 
     @Test
-    void executeShouldPersistOneMetricaPerColumn() throws Exception {
+    void executeShouldPersistOneMetricaPerColumn() {
         var columnas = List.of(
-                col("estado",   "Estado",   "VARCHAR(255)"),
-                col("casos",    "Casos",    "INT"),
-                col("porcentaje","Porcentaje","DECIMAL(10,2)")
+                col("estado",    "Estado",      "VARCHAR(255)"),
+                col("casos",     "Casos",       "INT"),
+                col("porcentaje","Porcentaje",  "DECIMAL(10,2)")
         );
         var dto = buildDto("Test Dataset", "test.csv", columnas);
 
         useCase.execute(dto);
 
-        // saveAll recibe exactamente 3 métricas
         verify(metricaRepository, times(1)).saveAll(argThat(list -> list.size() == 3));
     }
 
@@ -121,9 +130,6 @@ class UploadDatasetUseCaseTest {
         var dto1 = buildDto("Dataset A", "a.csv", List.of(col("x", "X", "INT")));
         var dto2 = buildDto("Dataset B", "b.csv", List.of(col("y", "Y", "INT")));
 
-        when(datasetRepository.existsByNombreTabla("a")).thenReturn(false);
-        when(datasetRepository.existsByNombreTabla("b")).thenReturn(false);
-
         Dataset r1 = useCase.execute(dto1);
         Dataset r2 = useCase.execute(dto2);
 
@@ -131,15 +137,28 @@ class UploadDatasetUseCaseTest {
     }
 
     @Test
-    void executeShouldCallCsvIngestWithCorrectTableName() throws Exception {
+    void executeShouldUploadCsvToGcs() {
         var dto = buildDto("Mi Dataset", "mis_datos_2024.csv",
                 List.of(col("col", "Col", "VARCHAR(255)")));
 
         useCase.execute(dto);
 
-        verify(csvIngestService).crearTablaEInsertarDatos(
-                eq("mis_datos_2024"), anyList(), any()
+        // Verifica que se subió a GCS con un objectName que incluye el nombre del archivo
+        verify(gcsStorageService).upload(
+                argThat(name -> name.contains("mis_datos_2024.csv")),
+                any(byte[].class)
         );
+    }
+
+    @Test
+    void executeShouldPublishKafkaEvent() {
+        var dto = buildDto("Mi Dataset", "test.csv",
+                List.of(col("col", "Col", "VARCHAR(255)")));
+
+        useCase.execute(dto);
+
+        // Verifica que se publicó exactamente un mensaje al topic
+        verify(emitter, times(1)).send(any(byte[].class));
     }
 
     // ── Tests: slugify ────────────────────────────────────────────────────────
@@ -162,7 +181,6 @@ class UploadDatasetUseCaseTest {
     void executeShouldSlugifyFileNameWithoutExtension() {
         var dto = buildDto("X", "reporte_final.csv", List.of(col("c","C","INT")));
         Dataset result = useCase.execute(dto);
-        // la extensión .csv se quita
         assertFalse(result.getNombreTabla().endsWith("csv"));
         assertEquals("reporte_final", result.getNombreTabla());
     }
@@ -177,6 +195,8 @@ class UploadDatasetUseCaseTest {
         assertThrows(TableAlreadyExistsException.class, () -> useCase.execute(dto));
         verify(datasetRepository, never()).save(any());
         verify(metricaRepository, never()).saveAll(anyList());
+        verify(gcsStorageService, never()).upload(any(), any());
+        verify(emitter, never()).send(any(byte[].class));
     }
 
     @Test
@@ -188,24 +208,19 @@ class UploadDatasetUseCaseTest {
         dto.setColumnas(List.of(col("c","C","INT")));
 
         assertThrows(IllegalArgumentException.class, () -> useCase.execute(dto));
+        verify(gcsStorageService, never()).upload(any(), any());
     }
 
     @Test
-    void executeShouldThrowAndNotSaveWhenCsvIngestFails() throws Exception {
-        doThrow(new SQLException("Error de BD"))
-                .when(csvIngestService).crearTablaEInsertarDatos(anyString(), anyList(), any());
+    void executeShouldThrowWhenGcsUploadFails() {
+        when(gcsStorageService.upload(anyString(), any(byte[].class)))
+                .thenThrow(new RuntimeException("GCS no disponible"));
 
         var dto = buildDto("X", "test.csv", List.of(col("c","C","INT")));
 
         assertThrows(RuntimeException.class, () -> useCase.execute(dto));
-    }
-
-    @Test
-    void executeShouldNotCallCsvIngestWhenTableExists() throws Exception {
-        when(datasetRepository.existsByNombreTabla(anyString())).thenReturn(true);
-        var dto = buildDto("X", "test.csv", List.of(col("c","C","INT")));
-
-        assertThrows(TableAlreadyExistsException.class, () -> useCase.execute(dto));
-        verify(csvIngestService, never()).crearTablaEInsertarDatos(any(), any(), any());
+        // Si GCS falla, no debe persistirse el dataset ni publicarse el evento
+        verify(datasetRepository, never()).save(any());
+        verify(emitter, never()).send(any(byte[].class));
     }
 }

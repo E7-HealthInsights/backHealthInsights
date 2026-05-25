@@ -3,6 +3,7 @@ package org.acme.application.usecase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.acme.application.dto.MetricaResponseDto;
+import org.acme.domain.models.DatasetEstado;
 import org.acme.domain.models.Metrica;
 import org.acme.domain.repository.DatasetRepository;
 import org.acme.domain.repository.MetricaRepository;
@@ -30,7 +31,7 @@ public class GetMetricasByDatasetUseCase {
     public List<Metrica> execute(UUID datasetId) {
         // Valida que el dataset exista y esté activo antes de devolver métricas
         datasetRepository.findDatasetById(datasetId)
-                .filter(d -> d.isEstado())
+                .filter(d -> d.getEstado() == DatasetEstado.READY)
                 .orElseThrow(() -> new jakarta.ws.rs.NotFoundException(
                         "Dataset no encontrado: " + datasetId));
 

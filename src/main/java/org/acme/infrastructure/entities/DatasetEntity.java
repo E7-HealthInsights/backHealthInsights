@@ -1,6 +1,7 @@
 package org.acme.infrastructure.entities;
 
 import jakarta.persistence.*;
+import org.acme.domain.models.DatasetEstado;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -34,13 +35,21 @@ public class DatasetEntity {
     @Column(name = "link", length = 500)
     private String link;
 
-    @Column(name = "estado", nullable = false)
-    private boolean estado = true;
+    /**
+     * Reemplaza el antiguo boolean estado.
+     * Se persiste como VARCHAR para legibilidad directa en BD.
+     * Valores: PENDING, PROCESSING, READY, ERROR.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false, length = 20)
+    private DatasetEstado estado = DatasetEstado.PENDING;
+
+    @Column(name = "error_mensaje", columnDefinition = "TEXT")
+    private String errorMensaje;
 
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
 
-    // Relación con métricas — se carga bajo demanda
     @OneToMany(mappedBy = "dataset", fetch = FetchType.LAZY)
     private List<MetricaEntity> metricas;
 
@@ -65,8 +74,11 @@ public class DatasetEntity {
     public String getLink() { return link; }
     public void setLink(String link) { this.link = link; }
 
-    public boolean isEstado() { return estado; }
-    public void setEstado(boolean estado) { this.estado = estado; }
+    public DatasetEstado getEstado() { return estado; }
+    public void setEstado(DatasetEstado estado) { this.estado = estado; }
+
+    public String getErrorMensaje() { return errorMensaje; }
+    public void setErrorMensaje(String errorMensaje) { this.errorMensaje = errorMensaje; }
 
     public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }

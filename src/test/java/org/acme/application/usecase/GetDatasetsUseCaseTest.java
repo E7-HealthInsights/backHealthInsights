@@ -1,6 +1,7 @@
 package org.acme.application.usecase;
 
 import org.acme.domain.models.Dataset;
+import org.acme.domain.models.DatasetEstado;
 import org.acme.domain.repository.DatasetRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ class GetDatasetsUseCaseTest {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private Dataset buildDataset(String nombre, boolean estado) {
+    private Dataset buildDataset(String nombre, DatasetEstado estado) {
         Dataset d = new Dataset();
         d.setId(UUID.randomUUID());
         d.setNombre(nombre);
@@ -41,8 +42,8 @@ class GetDatasetsUseCaseTest {
 
     @Test
     void executeShouldReturnAllActiveDatasets() {
-        Dataset d1 = buildDataset("Diabetes México 2023", true);
-        Dataset d2 = buildDataset("Hipertensión 2022", true);
+        Dataset d1 = buildDataset("Diabetes México 2023", DatasetEstado.READY);
+        Dataset d2 = buildDataset("Hipertensión 2022", DatasetEstado.READY);
 
         when(datasetRepository.findAllActive()).thenReturn(List.of(d1, d2));
 
@@ -70,13 +71,13 @@ class GetDatasetsUseCaseTest {
     void executeShouldDelegateFilteringToRepository() {
         // El use case confía en que el repositorio ya filtró por estado=true.
         // Verifica que nunca hace filtrado propio — solo delega y retorna.
-        Dataset d1 = buildDataset("Obesidad 2021", true);
+        Dataset d1 = buildDataset("Obesidad 2021", DatasetEstado.READY);
         when(datasetRepository.findAllActive()).thenReturn(List.of(d1));
 
         List<Dataset> result = useCase.execute();
 
         assertEquals(1, result.size());
-        assertTrue(result.get(0).isEstado());
+        assertEquals(org.acme.domain.models.DatasetEstado.READY, result.get(0).getEstado());
         // Solo se llama a findAllActive, nunca a findDatasetById ni otro método
         verify(datasetRepository, times(1)).findAllActive();
         verifyNoMoreInteractions(datasetRepository);
@@ -84,7 +85,7 @@ class GetDatasetsUseCaseTest {
 
     @Test
     void executeShouldPreserveDatasetFields() {
-        Dataset d = buildDataset("Diabetes México 2023", true);
+        Dataset d = buildDataset("Diabetes México 2023", DatasetEstado.READY);
         d.setFuente("SINAVE / Secretaría de Salud");
         d.setLink("https://sinave.gob.mx");
 

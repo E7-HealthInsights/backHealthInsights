@@ -83,6 +83,7 @@ public class FirebaseAuthFilter implements ContainerRequestFilter {
 
             //si se encuentra el usuario, se establece en el contexto de autenticación para que esté disponible en los recursos protegidos
         } catch (FirebaseAuthException e){
+            System.out.println("FirebaseAuthException: " + e.getAuthErrorCode() + " - " + e.getMessage());
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("No autorizado").build());
         };
     }

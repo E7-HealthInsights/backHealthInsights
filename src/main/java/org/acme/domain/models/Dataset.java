@@ -11,7 +11,8 @@ public class Dataset {
     private String fuente;
     private String archivoCsv;
     private String link;
-    private boolean estado;
+    private DatasetEstado estado;
+    private String errorMensaje;
     private LocalDateTime fechaActualizacion;
 
     public Dataset() {}
@@ -37,8 +38,11 @@ public class Dataset {
     public String getLink() { return link; }
     public void setLink(String link) { this.link = link; }
 
-    public boolean isEstado() { return estado; }
-    public void setEstado(boolean estado) { this.estado = estado; }
+    public DatasetEstado getEstado() { return estado; }
+    public void setEstado(DatasetEstado estado) { this.estado = estado; }
+
+    public String getErrorMensaje() { return errorMensaje; }
+    public void setErrorMensaje(String errorMensaje) { this.errorMensaje = errorMensaje; }
 
     public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
