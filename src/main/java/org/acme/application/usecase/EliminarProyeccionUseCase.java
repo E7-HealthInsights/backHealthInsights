@@ -16,6 +16,11 @@ public class EliminarProyeccionUseCase {
     @Inject ProyeccionRepository proyeccionRepository;
     @Inject AuthContext authContext;
 
+    public EliminarProyeccionUseCase(ProyeccionRepository proyeccionRepository, AuthContext authContext) {
+        this.proyeccionRepository = proyeccionRepository;
+        this.authContext = authContext;
+    }
+
     public void execute(UUID id) {
         // 1 — Busca la proyección
         Proyeccion proyeccion = proyeccionRepository.findProyeccionById(id)

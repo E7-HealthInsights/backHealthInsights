@@ -17,6 +17,11 @@ public class GuardarProyeccionUseCase {
     @Inject ProyeccionRepository proyeccionRepository;
     @Inject AuthContext authContext;
 
+    public GuardarProyeccionUseCase(ProyeccionRepository proyeccionRepository, AuthContext authContext) {
+        this.proyeccionRepository = proyeccionRepository;
+        this.authContext = authContext;
+    }
+
     public ProyeccionResponseDto execute(GuardarProyeccionDto dto) {
         Proyeccion proyeccion = new Proyeccion();
         proyeccion.setId(UUID.randomUUID());
