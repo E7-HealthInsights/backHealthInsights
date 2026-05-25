@@ -332,3 +332,8 @@ INSERT INTO Widget (id, title, usuario_id, tipo_id, query, orden, rol_id) VALUES
 (UUID(), 'Muertes por diabetes en México por año', NULL, 2,
  '{"tabla":"fuente1_datos_casos_ssa","colX":"ao","colY":"valor","funcion":"MAX","groupBy":"ao","filtroCol":"indicador","filtroVal":"Muertes(miles)"}',
  9, 2);
+
+
+-- Usuario fake del TestFirebaseAuthFilter (requerido para tests de integración)
+INSERT INTO Users (id, name, last_name, email, role_id, status, provider_id)
+VALUES ('00000000-0000-0000-0000-000000000001', 'Test', 'Admin', 'test@test.com', 1, true, 'test-firebase-uid');

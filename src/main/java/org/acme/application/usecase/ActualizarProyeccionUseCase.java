@@ -19,6 +19,11 @@ public class ActualizarProyeccionUseCase {
     @Inject ProyeccionRepository proyeccionRepository;
     @Inject AuthContext authContext;
 
+    public ActualizarProyeccionUseCase(ProyeccionRepository proyeccionRepository, AuthContext authContext) {
+        this.proyeccionRepository = proyeccionRepository;
+        this.authContext = authContext;
+    }
+
     public ProyeccionResponseDto execute(UUID id, GuardarProyeccionDto dto) {
         // 1 — Busca la proyección
         Proyeccion proyeccion = proyeccionRepository.findProyeccionById(id)
