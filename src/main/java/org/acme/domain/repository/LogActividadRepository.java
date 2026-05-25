@@ -10,4 +10,6 @@ public interface LogActividadRepository {
     List<LogActividad> findAllLogs();
     Optional<LogActividad> findLatestByEntidadId(String entidadId);
     void updateDetalle(UUID logid, String detalle);
+    List<LogActividad> findPaginated(int page, int size, String search);              
+    long countAll(String search);
 }

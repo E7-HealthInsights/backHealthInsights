@@ -2,6 +2,8 @@ package org.acme.application.usecase;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import org.acme.application.dto.PaginadoResponseDto;
 import org.acme.domain.models.LogActividad;
 import org.acme.domain.repository.LogActividadRepository;
 
@@ -19,5 +21,11 @@ public class GetLogActividadUseCase {
 
     public List<LogActividad> execute() {
         return logActividadRepository.findAllLogs();
+    }
+
+    public PaginadoResponseDto<LogActividad> execute(int page, int size, String search) {
+        List<LogActividad> data = logActividadRepository.findPaginated(page, size, search);
+        long total = logActividadRepository.countAll(search);
+        return new PaginadoResponseDto<>(data, total, page, size);
     }
 }
