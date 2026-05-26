@@ -34,7 +34,7 @@ class GetMetricasByDatasetUseCaseTest {
         activeDataset = new Dataset();
         activeDataset.setId(datasetId);
         activeDataset.setNombre("Diabetes México 2023");
-        activeDataset.setEstado(true);
+        activeDataset.setEstado(org.acme.domain.models.DatasetEstado.READY);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ class GetMetricasByDatasetUseCaseTest {
         Dataset inactiveDataset = new Dataset();
         inactiveDataset.setId(datasetId);
         inactiveDataset.setNombre("Dataset desactivado");
-        inactiveDataset.setEstado(false);   // inactivo
+        inactiveDataset.setEstado(org.acme.domain.models.DatasetEstado.PENDING);   // inactivo
 
         when(datasetRepository.findDatasetById(datasetId)).thenReturn(Optional.of(inactiveDataset));
 

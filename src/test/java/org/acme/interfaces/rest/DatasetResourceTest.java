@@ -45,7 +45,7 @@ class DatasetResourceTest {
         activo.setNombreTabla("diabetes_mexico_2023");
         activo.setDescripcion("Casos de diabetes por entidad");
         activo.setFuente("SINAVE");
-        activo.setEstado(true);
+        activo.setEstado(org.acme.domain.models.DatasetEstado.READY);
         activo.setFechaActualizacion(LocalDateTime.now());
         datasetRepository.persist(activo);
 
@@ -70,7 +70,7 @@ class DatasetResourceTest {
         inactivo.setId(DATASET_INACTIVO_ID);
         inactivo.setNombre("Dataset Inactivo");
         inactivo.setNombreTabla("dataset_inactivo");
-        inactivo.setEstado(false);
+        inactivo.setEstado(org.acme.domain.models.DatasetEstado.ERROR);
         inactivo.setFechaActualizacion(LocalDateTime.now());
         datasetRepository.persist(inactivo);
     }

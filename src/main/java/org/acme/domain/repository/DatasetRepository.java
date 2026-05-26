@@ -1,6 +1,7 @@
 package org.acme.domain.repository;
 
 import org.acme.domain.models.Dataset;
+import org.acme.domain.models.DatasetEstado;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +11,7 @@ public interface DatasetRepository {
     List<Dataset> findAllActive();
     Optional<Dataset> findDatasetById(UUID id);
     Dataset save(Dataset dataset);
+    Dataset update(Dataset dataset);
     boolean existsByNombreTabla(String nombreTabla);
     Optional<Dataset> findByNombreTabla(String nombreTabla);
 }

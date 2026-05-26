@@ -27,18 +27,25 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>com.google.auth</groupId>
+                <artifactId>google-auth-library-credentials</artifactId>
+                <version>1.42.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.auth</groupId>
+                <artifactId>google-auth-library-oauth2-http</artifactId>
+                <version>1.42.1</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
+        <!-- ── Core Quarkus ──────────────────────────────────────────────── -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>io.quarkus</groupId>-->
-        <!--            <artifactId>quarkus-rest</artifactId>-->
-        <!--        </dependency>-->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-jsonb</artifactId>
@@ -47,13 +54,18 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-validator</artifactId>
         </dependency>
+
+        <!-- ── Persistencia ──────────────────────────────────────────────── -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit</artifactId>
-            <scope>test</scope>
+            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-mysql</artifactId>
         </dependency>
 
-        <!-- Source: https://mvnrepository.com/artifact/com.google.firebase/firebase-admin -->
+        <!-- ── Firebase Auth ─────────────────────────────────────────────── -->
         <dependency>
             <groupId>com.google.firebase</groupId>
             <artifactId>firebase-admin</artifactId>
@@ -61,18 +73,42 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- Hibernate ORM specific dependencies -->
+        <!-- ── Seguridad ─────────────────────────────────────────────────── -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+            <artifactId>quarkus-security</artifactId>
         </dependency>
 
-        <!-- JDBC driver dependencies -->
+        <!-- ── Kafka (Smallrye Reactive Messaging) ───────────────────────── -->
+        <!--
+            quarkus-messaging-kafka trae el conector Kafka para
+            @Incoming / @Outgoing de Smallrye Reactive Messaging.
+            También expone @Channel + Emitter para producir mensajes
+            de forma imperativa desde el UseCase.
+        -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-mysql</artifactId>
+            <artifactId>quarkus-messaging-kafka</artifactId>
         </dependency>
 
+        <!-- ── Google Cloud Storage ──────────────────────────────────────── -->
+        <!--
+            SDK oficial de GCS. Se configura con Application Default Credentials
+            (en Cloud Run se usa la SA del servicio; en local se usa
+            GOOGLE_APPLICATION_CREDENTIALS apuntando al JSON de la SA).
+        -->
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+            <version>2.43.1</version>
+        </dependency>
+
+        <!-- ── Test ──────────────────────────────────────────────────────── -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-h2</artifactId>
@@ -89,12 +125,6 @@
             <version>5.2.0</version>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-security</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
