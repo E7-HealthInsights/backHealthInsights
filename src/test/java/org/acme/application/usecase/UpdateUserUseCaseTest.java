@@ -5,8 +5,10 @@ import org.acme.domain.exception.RoleNotFoundException;
 import org.acme.domain.exception.UserNotFoundException;
 import org.acme.domain.models.Role;
 import org.acme.domain.models.User;
+import org.acme.domain.repository.LogActividadRepository;
 import org.acme.domain.repository.RoleRepository;
 import org.acme.domain.repository.UserRepository;
+import org.acme.infrastructure.security.AuthContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,12 +17,15 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class UpdateUserUseCaseTest {
 
     private UserRepository userRepository;
     private RoleRepository roleRepository;
+    private AuthContext authContext;
+    private LogActividadRepository logActividadRepository;
     private UpdateUserUseCase useCase;
 
     private final UUID USER_ID = UUID.randomUUID();
@@ -32,7 +37,14 @@ class UpdateUserUseCaseTest {
     void setUp() {
         userRepository = mock(UserRepository.class);
         roleRepository = mock(RoleRepository.class);
-        useCase = new UpdateUserUseCase(userRepository, roleRepository);
+        authContext = mock(AuthContext.class);
+        logActividadRepository = mock(LogActividadRepository.class);
+
+        User adminUser = new User(UUID.randomUUID(), "Admin", "Test", "admin@test.com", null, true, "firebase-admin");
+        when(authContext.getUser()).thenReturn(adminUser);
+        when(logActividadRepository.findLatestByEntidadId(anyString())).thenReturn(Optional.empty());
+
+        useCase = new UpdateUserUseCase(userRepository, roleRepository, authContext, logActividadRepository);
 
         adminRole = new Role((byte) 1, "ADMIN");
         finanzasRole = new Role((byte) 2, "FINANZAS");

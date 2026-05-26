@@ -17,6 +17,7 @@ public class DatasetMapper {
         dataset.setEstado(entity.getEstado());
         dataset.setErrorMensaje(entity.getErrorMensaje());
         dataset.setFechaActualizacion(entity.getFechaActualizacion());
+        dataset.setModifiedBy(entity.getModifiedBy());
         return dataset;
     }
 
@@ -32,6 +33,7 @@ public class DatasetMapper {
         entity.setEstado(dataset.getEstado());
         entity.setErrorMensaje(dataset.getErrorMensaje());
         entity.setFechaActualizacion(dataset.getFechaActualizacion());
+        entity.setModifiedBy(dataset.getModifiedBy());
         return entity;
     }
 }

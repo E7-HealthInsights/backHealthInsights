@@ -55,6 +55,12 @@ public class WidgetEntity {
     @Column(name = "orden")
     private int orden;
 
+    @Column(name = "tipo_semantico", length = 20, nullable = true)
+    private String tipoSemantico;
+
+    @Column(name = "nivel_geografico", length = 20, nullable = true)
+    private String nivelGeografico;
+
     public UUID getId() {
         return id;
     }
@@ -106,8 +112,24 @@ public class WidgetEntity {
     public Byte getRolId() {
         return rolId;
     }
-    
+
     public void setRolId(Byte rolId) {
         this.rolId = rolId;
+    }
+
+    public String getTipoSemantico() {
+        return tipoSemantico;
+    }
+
+    public void setTipoSemantico(String tipoSemantico) {
+        this.tipoSemantico = tipoSemantico;
+    }
+
+    public String getNivelGeografico() {
+        return nivelGeografico;
+    }
+
+    public void setNivelGeografico(String nivelGeografico) {
+        this.nivelGeografico = nivelGeografico;
     }
 }

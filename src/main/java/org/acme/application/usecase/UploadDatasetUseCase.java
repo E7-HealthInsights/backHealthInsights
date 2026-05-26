@@ -3,6 +3,7 @@ package org.acme.application.usecase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.acme.application.dto.UploadDatasetDto;
 import org.acme.domain.exception.TableAlreadyExistsException;
@@ -12,6 +13,7 @@ import org.acme.domain.models.Metrica;
 import org.acme.domain.repository.DatasetRepository;
 import org.acme.domain.repository.MetricaRepository;
 import org.acme.infrastructure.messaging.DatasetCsvUploadedEvent;
+import org.acme.infrastructure.security.AuthContext;
 import org.acme.infrastructure.storage.GcsStorageService;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
@@ -25,12 +27,12 @@ import java.util.UUID;
 /**
  * Caso de uso: registrar un dataset y disparar el ingest asíncrono.
  *
- * Flujo nuevo (asíncrono):
+ * Flujo (asíncrono con Kafka):
  *  1. Validar que la tabla no exista ya.
  *  2. Decodificar el CSV base64 y subirlo a GCS.
  *  3. Persistir el Dataset en estado PENDING.
  *  4. Persistir las Métricas.
- *  5. Publicar el evento {@link DatasetCsvUploadedEvent} al topic Kafka.
+ *  5. Publicar el evento DatasetCsvUploadedEvent al topic Kafka.
  *  6. Responder 202 Accepted — el ingest ocurre en el consumer.
  */
 @ApplicationScoped
@@ -41,6 +43,8 @@ public class UploadDatasetUseCase {
     private final DatasetRepository datasetRepository;
     private final MetricaRepository metricaRepository;
     private final GcsStorageService gcsStorageService;
+    private final AuthContext authContext;
+    private final EntityManager em;
     private final Emitter<String> emitter;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -49,11 +53,15 @@ public class UploadDatasetUseCase {
             DatasetRepository datasetRepository,
             MetricaRepository metricaRepository,
             GcsStorageService gcsStorageService,
+            AuthContext authContext,
+            EntityManager em,
             @Channel("dataset-csv-uploaded-out") Emitter<String> emitter
     ) {
         this.datasetRepository = datasetRepository;
         this.metricaRepository = metricaRepository;
         this.gcsStorageService = gcsStorageService;
+        this.authContext       = authContext;
+        this.em                = em;
         this.emitter           = emitter;
     }
 
@@ -89,6 +97,7 @@ public class UploadDatasetUseCase {
         dataset.setArchivoCsv(dto.getArchivoNombre());
         dataset.setEstado(DatasetEstado.PENDING);
         dataset.setFechaActualizacion(LocalDateTime.now());
+        dataset.setModifiedBy(authContext.getUser().getId().toString());
 
         Dataset savedDataset = datasetRepository.save(dataset);
         LOG.infof("Dataset '%s' persistido — id=%s, estado=PENDING", savedDataset.getNombre(), savedDataset.getId());
@@ -107,7 +116,7 @@ public class UploadDatasetUseCase {
         metricaRepository.saveAll(metricas);
         LOG.infof("%d métricas persistidas para dataset id=%s", metricas.size(), savedDataset.getId());
 
-        // 5 — Serializar el evento a JSON y publicar en Kafka
+        // 5 — Publicar evento Kafka
         DatasetCsvUploadedEvent event = new DatasetCsvUploadedEvent(
                 savedDataset.getId(),
                 nombreTabla,
@@ -118,16 +127,31 @@ public class UploadDatasetUseCase {
         try {
             String eventJson = objectMapper.writeValueAsString(event);
             emitter.send(eventJson);
-            LOG.infof("Evento Kafka publicado — datasetId=%s, objectName=%s", savedDataset.getId(), objectName);
+            LOG.infof("Evento Kafka publicado — datasetId=%s, objectName=%s",
+                    savedDataset.getId(), objectName);
         } catch (Exception e) {
-            LOG.errorf("Error al publicar evento Kafka para datasetId=%s: %s", savedDataset.getId(), e.getMessage());
+            LOG.errorf("Error al publicar evento Kafka para datasetId=%s: %s",
+                    savedDataset.getId(), e.getMessage());
             throw new RuntimeException("Error al encolar el procesamiento del dataset.", e);
+        }
+
+        // 6 — Flush para que el trigger de LogActividad dispare dentro de la transacción
+        em.flush();
+
+        if (dto.getJustification() != null && !dto.getJustification().isBlank()) {
+            em.createNativeQuery(
+                "UPDATE LogActividad " +
+                "SET detalle = :detalle " +
+                "WHERE entidad_id = :entidadId " +
+                "ORDER BY fecha DESC LIMIT 1"
+            )
+            .setParameter("detalle", dto.getJustification())
+            .setParameter("entidadId", savedDataset.getId().toString())
+            .executeUpdate();
         }
 
         return savedDataset;
     }
-
-    // ── Privados ────────────────────────────────────────────────────────────
 
     private String slugify(String fileName) {
         String name = fileName.replaceAll("(?i)\\.csv$", "");

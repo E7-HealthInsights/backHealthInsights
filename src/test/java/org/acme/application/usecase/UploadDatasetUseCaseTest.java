@@ -1,13 +1,18 @@
 package org.acme.application.usecase;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import org.acme.application.dto.ColumnDefinitionDto;
 import org.acme.application.dto.UploadDatasetDto;
 import org.acme.domain.exception.TableAlreadyExistsException;
 import org.acme.domain.models.Dataset;
 import org.acme.domain.models.DatasetEstado;
 import org.acme.domain.models.Metrica;
+import org.acme.domain.models.Role;
+import org.acme.domain.models.User;
 import org.acme.domain.repository.DatasetRepository;
 import org.acme.domain.repository.MetricaRepository;
+import org.acme.infrastructure.security.AuthContext;
 import org.acme.infrastructure.storage.GcsStorageService;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +31,8 @@ class UploadDatasetUseCaseTest {
     private DatasetRepository datasetRepository;
     private MetricaRepository metricaRepository;
     private GcsStorageService gcsStorageService;
+    private AuthContext       authContext;
+    private EntityManager     em;
     private Emitter<String>   emitter;
     private UploadDatasetUseCase useCase;
 
@@ -35,14 +42,29 @@ class UploadDatasetUseCaseTest {
         datasetRepository = mock(DatasetRepository.class);
         metricaRepository = mock(MetricaRepository.class);
         gcsStorageService = mock(GcsStorageService.class);
-        emitter = mock(Emitter.class);
+        authContext       = mock(AuthContext.class);
+        em                = mock(EntityManager.class);
+        emitter           = mock(Emitter.class);
 
-        // Por defecto: la tabla no existe, save devuelve lo que recibe
+        // Usuario admin mockeado para AuthContext
+        Role role = new Role((byte) 1, "ADMIN");
+        User adminUser = new User(UUID.randomUUID(), "Admin", "Test",
+                "admin@test.com", role, true, "firebase-admin");
+        when(authContext.getUser()).thenReturn(adminUser);
+
+        // EntityManager — flush y query nativa no hacen nada en tests
+        doNothing().when(em).flush();
+        Query mockQuery = mock(Query.class);
+        when(em.createNativeQuery(anyString())).thenReturn(mockQuery);
+        when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
+        when(mockQuery.executeUpdate()).thenReturn(0);
+
+        // Por defecto: tabla no existe, save devuelve lo que recibe
         when(datasetRepository.existsByNombreTabla(anyString())).thenReturn(false);
         when(datasetRepository.save(any(Dataset.class))).thenAnswer(inv -> inv.getArgument(0));
         doNothing().when(metricaRepository).saveAll(anyList());
 
-        // GCS upload devuelve una URI de ejemplo
+        // GCS upload devuelve URI de ejemplo
         when(gcsStorageService.upload(anyString(), any(byte[].class)))
                 .thenReturn("gs://test-bucket/datasets/test.csv");
 
@@ -50,6 +72,8 @@ class UploadDatasetUseCaseTest {
                 datasetRepository,
                 metricaRepository,
                 gcsStorageService,
+                authContext,
+                em,
                 emitter
         );
     }
@@ -89,10 +113,10 @@ class UploadDatasetUseCaseTest {
         Dataset result = useCase.execute(dto);
 
         assertNotNull(result.getId());
-        assertEquals("ENSANUT 2024",    result.getNombre());
-        assertEquals("ensanut_2024",    result.getNombreTabla());
-        assertEquals("INEGI",           result.getFuente());
-        assertEquals("ensanut_2024.csv",result.getArchivoCsv());
+        assertEquals("ENSANUT 2024",     result.getNombre());
+        assertEquals("ensanut_2024",     result.getNombreTabla());
+        assertEquals("INEGI",            result.getFuente());
+        assertEquals("ensanut_2024.csv", result.getArchivoCsv());
         assertEquals(DatasetEstado.PENDING, result.getEstado());
         assertNotNull(result.getFechaActualizacion());
     }
@@ -100,9 +124,9 @@ class UploadDatasetUseCaseTest {
     @Test
     void executeShouldPersistOneMetricaPerColumn() {
         var columnas = List.of(
-                col("estado",    "Estado",      "VARCHAR(255)"),
-                col("casos",     "Casos",       "INT"),
-                col("porcentaje","Porcentaje",  "DECIMAL(10,2)")
+                col("estado",     "Estado",     "VARCHAR(255)"),
+                col("casos",      "Casos",      "INT"),
+                col("porcentaje", "Porcentaje", "DECIMAL(10,2)")
         );
         var dto = buildDto("Test Dataset", "test.csv", columnas);
 
@@ -143,7 +167,6 @@ class UploadDatasetUseCaseTest {
 
         useCase.execute(dto);
 
-        // Verifica que se subió a GCS con un objectName que incluye el nombre del archivo
         verify(gcsStorageService).upload(
                 argThat(name -> name.contains("mis_datos_2024.csv")),
                 any(byte[].class)
@@ -157,29 +180,38 @@ class UploadDatasetUseCaseTest {
 
         useCase.execute(dto);
 
-        // Verifica que se publicó exactamente un mensaje al topic
         verify(emitter, times(1)).send(any(String.class));
+    }
+
+    @Test
+    void executeShouldSetModifiedByFromAuthContext() {
+        var dto = buildDto("Mi Dataset", "test.csv",
+                List.of(col("col", "Col", "VARCHAR(255)")));
+
+        Dataset result = useCase.execute(dto);
+
+        assertNotNull(result.getModifiedBy());
     }
 
     // ── Tests: slugify ────────────────────────────────────────────────────────
 
     @Test
     void executeShouldSlugifyFileNameWithSpaces() {
-        var dto = buildDto("X", "ENSANUT 2024 Final.csv", List.of(col("c","C","INT")));
+        var dto = buildDto("X", "ENSANUT 2024 Final.csv", List.of(col("c", "C", "INT")));
         Dataset result = useCase.execute(dto);
         assertEquals("ensanut_2024_final", result.getNombreTabla());
     }
 
     @Test
     void executeShouldSlugifyFileNameWithSpecialChars() {
-        var dto = buildDto("X", "datos(2023).csv", List.of(col("c","C","INT")));
+        var dto = buildDto("X", "datos(2023).csv", List.of(col("c", "C", "INT")));
         Dataset result = useCase.execute(dto);
         assertEquals("datos_2023", result.getNombreTabla());
     }
 
     @Test
     void executeShouldSlugifyFileNameWithoutExtension() {
-        var dto = buildDto("X", "reporte_final.csv", List.of(col("c","C","INT")));
+        var dto = buildDto("X", "reporte_final.csv", List.of(col("c", "C", "INT")));
         Dataset result = useCase.execute(dto);
         assertFalse(result.getNombreTabla().endsWith("csv"));
         assertEquals("reporte_final", result.getNombreTabla());
@@ -190,7 +222,7 @@ class UploadDatasetUseCaseTest {
     @Test
     void executeShouldThrowWhenTableAlreadyExists() {
         when(datasetRepository.existsByNombreTabla("duplicado")).thenReturn(true);
-        var dto = buildDto("X", "duplicado.csv", List.of(col("c","C","INT")));
+        var dto = buildDto("X", "duplicado.csv", List.of(col("c", "C", "INT")));
 
         assertThrows(TableAlreadyExistsException.class, () -> useCase.execute(dto));
         verify(datasetRepository, never()).save(any());
@@ -205,7 +237,7 @@ class UploadDatasetUseCaseTest {
         dto.setNombre("X");
         dto.setArchivoNombre("test.csv");
         dto.setArchivoCsvBase64("esto-no-es-base64!!!");
-        dto.setColumnas(List.of(col("c","C","INT")));
+        dto.setColumnas(List.of(col("c", "C", "INT")));
 
         assertThrows(IllegalArgumentException.class, () -> useCase.execute(dto));
         verify(gcsStorageService, never()).upload(any(), any());
@@ -216,10 +248,9 @@ class UploadDatasetUseCaseTest {
         when(gcsStorageService.upload(anyString(), any(byte[].class)))
                 .thenThrow(new RuntimeException("GCS no disponible"));
 
-        var dto = buildDto("X", "test.csv", List.of(col("c","C","INT")));
+        var dto = buildDto("X", "test.csv", List.of(col("c", "C", "INT")));
 
         assertThrows(RuntimeException.class, () -> useCase.execute(dto));
-        // Si GCS falla, no debe persistirse el dataset ni publicarse el evento
         verify(datasetRepository, never()).save(any());
         verify(emitter, never()).send(any(String.class));
     }

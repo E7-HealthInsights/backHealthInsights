@@ -14,6 +14,22 @@ public class Dataset {
     private DatasetEstado estado;
     private String errorMensaje;
     private LocalDateTime fechaActualizacion;
+    private String modifiedBy;
+
+    // Constructor legacy — usa DatasetEstado en lugar del boolean original
+    public Dataset(UUID id, String nombre, String nombreTabla, String descripcion,
+                   String fuente, String archivoCsv, String link,
+                   DatasetEstado estado, LocalDateTime fechaActualizacion) {
+        this.id = id;
+        this.nombre = nombre;
+        this.nombreTabla = nombreTabla;
+        this.descripcion = descripcion;
+        this.fuente = fuente;
+        this.archivoCsv = archivoCsv;
+        this.link = link;
+        this.estado = estado;
+        this.fechaActualizacion = fechaActualizacion;
+    }
 
     public Dataset() {}
 
@@ -46,4 +62,7 @@ public class Dataset {
 
     public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
+
+    public String getModifiedBy() { return modifiedBy; }
+    public void setModifiedBy(String modifiedBy) { this.modifiedBy = modifiedBy; }
 }

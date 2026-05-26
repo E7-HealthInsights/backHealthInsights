@@ -78,6 +78,49 @@ class UserResourceTest {
         if (otherRoleId != null) roleRepository.deleteById(otherRoleId);
     }
 
+    // ── PATCH /users/{id} ────────────────────────────────────────────────────
+
+    @Test
+    void deactivateUserShouldReturn204WhenUserExists() {
+        given()
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .patch("/users/{id}", TEST_USER_ID)
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void deactivateUserShouldReturn404WhenUserNotFound() {
+        UUID unknownId = UUID.randomUUID();
+
+        given()
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .patch("/users/{id}", unknownId)
+                .then()
+                .statusCode(404)
+                .body("message", notNullValue());
+    }
+
+    @Test
+    void deactivateUserShouldSetStatusFalseInDatabase() {
+        given()
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .patch("/users/{id}", TEST_USER_ID)
+                .then()
+                .statusCode(204);
+
+        given()
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .get("/users")
+                .then()
+                .statusCode(200)
+                .body("find { it.id == '" + TEST_USER_ID + "' }.status", equalTo(false));
+    }
+
     // ── PUT /users/{id} ───────────────────────────────────────────────────────
 
     @Test

@@ -12,6 +12,8 @@ public class WidgetResponseDto {
     private String yAxisLabel;
     private String tipo;
     private int orden;
+    private String tipoSemantico;
+    private String nivelGeografico;
     private Map<String, Object> data;
 
     public UUID getId() {
@@ -84,5 +86,21 @@ public class WidgetResponseDto {
 
     public void setyAxisLabel(String yAxisLabel) {
         this.yAxisLabel = yAxisLabel;
+    }
+
+    public String getTipoSemantico() {
+        return tipoSemantico;
+    }
+
+    public void setTipoSemantico(String tipoSemantico) {
+        this.tipoSemantico = tipoSemantico;
+    }
+
+    public String getNivelGeografico() {
+        return nivelGeografico;
+    }
+
+    public void setNivelGeografico(String nivelGeografico) {
+        this.nivelGeografico = nivelGeografico;
     }
 }

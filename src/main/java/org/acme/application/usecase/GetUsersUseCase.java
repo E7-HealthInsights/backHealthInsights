@@ -2,6 +2,8 @@ package org.acme.application.usecase;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import org.acme.application.dto.PaginadoResponseDto;
 import org.acme.application.dto.UserResponseDto;
 import org.acme.domain.models.User;
 import org.acme.domain.repository.UserRepository;
@@ -22,5 +24,11 @@ public class GetUsersUseCase {
 
     public ArrayList<User> execute() {
         return this.userRepository.findAllUsers();
+    }
+
+    public PaginadoResponseDto<User> execute(int page, int size, String search, boolean status) {
+        List<User> data  = userRepository.findPaginated(page, size, search, status);
+        long total       = userRepository.countUsers(search, status);
+        return new PaginadoResponseDto<>(data, total, page, size);
     }
 }

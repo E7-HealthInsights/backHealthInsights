@@ -7,13 +7,16 @@ import org.acme.domain.exception.EmailAlreadyExistsException;
 import org.acme.domain.exception.RoleNotFoundException;
 import org.acme.domain.models.Role;
 import org.acme.domain.models.User;
+import org.acme.domain.repository.LogActividadRepository;
 import org.acme.domain.repository.RoleRepository;
 import org.acme.domain.repository.UserRepository;
 import org.acme.infrastructure.firebase.FirebaseUserCreator;
+import org.acme.infrastructure.security.AuthContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +28,8 @@ class CreateUserUseCaseTest {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private FirebaseUserCreator firebaseUserCreator;
+    private AuthContext authContext;
+    private LogActividadRepository logActividadRepository;
     private CreateUserUseCase useCase;
 
     private Role role;
@@ -34,8 +39,11 @@ class CreateUserUseCaseTest {
         userRepository = mock(UserRepository.class);
         roleRepository = mock(RoleRepository.class);
         firebaseUserCreator = mock(FirebaseUserCreator.class);
+        authContext = mock(AuthContext.class);
+        logActividadRepository = mock(LogActividadRepository.class);
 
         role = new Role((byte) 1, "ADMIN");
+        User adminUser = new User(UUID.randomUUID(), "Admin", "Test", "admin@test.com", role, true, "firebase-admin");
 
         UserRecord mockUserRecord = mock(UserRecord.class);
         when(mockUserRecord.getUid()).thenReturn("firebase-test-uid");
@@ -44,8 +52,10 @@ class CreateUserUseCaseTest {
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(firebaseUserCreator.create(anyString(), anyString())).thenReturn(mockUserRecord);
         when(userRepository.create(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(authContext.getUser()).thenReturn(adminUser);
+        when(logActividadRepository.findLatestByEntidadId(anyString())).thenReturn(Optional.empty());
 
-        useCase = new CreateUserUseCase(userRepository, firebaseUserCreator, roleRepository);
+        useCase = new CreateUserUseCase(userRepository, firebaseUserCreator, roleRepository, authContext, logActividadRepository);
     }
 
     @Test
