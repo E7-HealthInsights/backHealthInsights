@@ -52,7 +52,7 @@ public class CreateUserUseCase {
         user.setName(createUserDto.getName());
         user.setLastName(createUserDto.getLastName());
         user.setEmail(createUserDto.getEmail());
-        user.setStatus(true);
+        user.setStatus(createUserDto.getStatus() == null ? true : createUserDto.getStatus());
         user.setRole(role);
         // user.setModifiedBy(authContext.getUser().getId().toString());
         user.setModifiedBy(authContext.getUser().getId().toString());
