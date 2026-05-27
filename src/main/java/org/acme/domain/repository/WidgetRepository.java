@@ -10,4 +10,5 @@ public interface WidgetRepository {
     List<Widget> findByUserId(UUID userId);
     List<Widget> findDefaultsByRolId(Byte rolId);
     void updateOrden(UUID widgetId, int orden);
+    void removeById(UUID widgetId);
 }
