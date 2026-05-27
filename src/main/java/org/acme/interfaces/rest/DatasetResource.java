@@ -11,12 +11,14 @@ import org.acme.application.dto.ErrorResponseDto;
 import org.acme.application.dto.UploadDatasetDto;
 import org.acme.application.usecase.GetDatasetsUseCase;
 import org.acme.application.usecase.GetMetricasByDatasetUseCase;
+import org.acme.application.usecase.GetValoresDistintosUseCase;
 import org.acme.application.usecase.UploadDatasetUseCase;
 import org.acme.domain.exception.TableAlreadyExistsException;
 import org.acme.domain.models.Dataset;
 import org.acme.domain.repository.DatasetRepository;
 import org.jboss.logging.Logger;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,6 +30,7 @@ public class DatasetResource {
 
     @Inject GetDatasetsUseCase getDatasetsUseCase;
     @Inject GetMetricasByDatasetUseCase getMetricasByDatasetUseCase;
+    @Inject GetValoresDistintosUseCase getValoresDistintosUseCase;
     @Inject UploadDatasetUseCase uploadDatasetUseCase;
     @Inject DatasetRepository datasetRepository;
 
@@ -56,8 +59,36 @@ public class DatasetResource {
     }
 
     /**
-     * GET /datasets/{id}/status
+     * GET /datasets/{id}/metricas/{columna}/valores-distintos
      *
+     * Devuelve hasta 50 valores únicos de la columna indicada.
+     * El front usa esto para decidir si muestra un dropdown (≤ 50 valores)
+     * o un input libre (> 50 valores, cubierto enviando todos los que haya).
+     *
+     * Respuesta: { "valores": ["val1", "val2", ...], "total": 12 }
+     */
+    @GET
+    @Path("/{id}/metricas/{columna}/valores-distintos")
+    public Response getValoresDistintos(
+            @PathParam("id")      UUID   id,
+            @PathParam("columna") String columna) {
+        try {
+            List<String> valores = getValoresDistintosUseCase.execute(id, columna);
+            return Response.ok(Map.of(
+                    "valores", valores,
+                    "total",   valores.size()
+            )).build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponseDto(e.getMessage()))
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponseDto(e.getMessage()))
+                    .build();
+        }
+    }
+     /*
      * Endpoint de polling para que el frontend sepa en qué estado está
      * el ingest de un dataset recién subido.
      *
