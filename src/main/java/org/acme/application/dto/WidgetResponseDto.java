@@ -15,6 +15,7 @@ public class WidgetResponseDto {
     private String tipoSemantico;
     private String nivelGeografico;
     private Map<String, Object> data;
+    private boolean esDefault;
 
     public UUID getId() {
         return id;
@@ -102,5 +103,13 @@ public class WidgetResponseDto {
 
     public void setNivelGeografico(String nivelGeografico) {
         this.nivelGeografico = nivelGeografico;
+    }
+
+    public boolean isEsDefault() {
+        return esDefault;
+    }
+
+    public void setEsDefault(boolean esDefault) {
+        this.esDefault = esDefault;
     }
 }

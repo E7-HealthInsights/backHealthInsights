@@ -33,9 +33,9 @@ public class WidgetRepositoryImpl implements WidgetRepository, PanacheRepository
     @Override
     public List<Widget> findByUserId(UUID userId){
         List<WidgetEntity> entities = em.createQuery(
-                "SELECT w FROM WidgetEntity w WHERE w.usuario.id = :userId",
-                WidgetEntity.class
-        )
+                        "SELECT w FROM WidgetEntity w WHERE w.usuario.id = :userId",
+                        WidgetEntity.class
+                )
                 .setParameter("userId", userId)
                 .setHint("jakarta.persistence.fetchgraph", em.getEntityGraph("Widget.withTipo"))
                 .getResultList();
@@ -52,6 +52,15 @@ public class WidgetRepositoryImpl implements WidgetRepository, PanacheRepository
                 .setHint("jakarta.persistence.fetchgraph", em.getEntityGraph("Widget.withTipo"))
                 .getResultList();
         return entities.stream().map(WidgetMapper::toDomain).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    @Transactional
+    public void updateOrden(UUID widgetId, int orden) {
+        em.createQuery("UPDATE WidgetEntity w SET w.orden = :orden WHERE w.id = :id")
+                .setParameter("orden", orden)
+                .setParameter("id", widgetId)
+                .executeUpdate();
     }
 
 }

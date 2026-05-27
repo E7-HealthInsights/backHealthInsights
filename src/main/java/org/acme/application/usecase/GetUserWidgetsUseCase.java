@@ -54,6 +54,7 @@ public class GetUserWidgetsUseCase {
         dto.setTipo(tipo);
         dto.setTipoSemantico(widget.getTipoSemantico());
         dto.setNivelGeografico(widget.getNivelGeografico());
+        dto.setEsDefault(widget.getRolId() != null);
 
         // 1 — Ejecuta la query SIEMPRE primero
         Map<String, Object> data = new java.util.HashMap<>(
