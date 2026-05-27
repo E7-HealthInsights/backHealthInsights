@@ -63,4 +63,12 @@ public class WidgetRepositoryImpl implements WidgetRepository, PanacheRepository
                 .executeUpdate();
     }
 
+    @Override
+    @Transactional
+    public void removeById(UUID widgetId) {
+        em.createQuery("DELETE FROM WidgetEntity w WHERE w.id = :id")
+                .setParameter("id", widgetId)
+                .executeUpdate();
+    }
+
 }

@@ -6,16 +6,21 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotFoundException;
 import org.acme.application.dto.CreateWidgetDto;
+import org.acme.application.dto.ErrorResponseDto;
 import org.acme.application.dto.WidgetOrdenDto;
 import org.acme.application.dto.WidgetResponseDto;
 import org.acme.application.usecase.CreateWidgetUseCase;
+import org.acme.application.usecase.DeleteWidgetUseCase;
 import org.acme.application.usecase.GetUserWidgetsUseCase;
 import org.acme.application.usecase.UpdateWidgetOrdenUseCase;
 import org.acme.domain.models.Widget;
 import org.acme.infrastructure.security.AuthContext;
 
 import java.util.List;
+import java.util.UUID;
 
 @Path("/widgets")
 @Produces(MediaType.APPLICATION_JSON)
@@ -24,6 +29,8 @@ public class WidgetResource {
 
     @Inject
     CreateWidgetUseCase createWidgetUseCase;
+    @Inject
+    DeleteWidgetUseCase deleteWidgetUseCase;
     @Inject
     GetUserWidgetsUseCase getUserWidgetsUseCase;
     @Inject
@@ -51,6 +58,24 @@ public class WidgetResource {
     public Response getWidgets() {
         List<WidgetResponseDto> response = getUserWidgetsUseCase.execute();
         return Response.ok(response).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @RolesAllowed({"DIRECTOR_GENERAL", "DIRECTOR_FINANZAS", "DIRECTOR_MERCADOTECNIA"})
+    public Response deleteWidget(@PathParam("id") UUID id) {
+        try {
+            deleteWidgetUseCase.execute(id);
+            return Response.noContent().build();
+        } catch (ForbiddenException e) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(new ErrorResponseDto(e.getMessage()))
+                    .build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponseDto(e.getMessage()))
+                    .build();
+        }
     }
 
     @PATCH
