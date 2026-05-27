@@ -11,8 +11,9 @@ import java.util.regex.Pattern;
 @ApplicationScoped
 public class DistinctValuesExecutor {
 
-    // Solo letras, dígitos y guion bajo — previene inyección en nombres de tabla/columna
-    private static final Pattern SAFE_IDENTIFIER = Pattern.compile("^[a-zA-Z0-9_]+$");
+    // Letras, dígitos, guion bajo, espacios y guion medio — cubre nombres de columnas CSV reales.
+    // Los backticks en el SQL ya protegen contra inyección estructural.
+    private static final Pattern SAFE_IDENTIFIER = Pattern.compile("^[a-zA-Z0-9_ -]+$");
 
     @Inject
     DataSource dataSource;
