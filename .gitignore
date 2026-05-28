@@ -37,7 +37,6 @@ nb-configuration.xml
 *.rej
 
 # Local environment
-.env
 comando.md
 /temp_csv/
 .claude/
@@ -46,3 +45,9 @@ comando.md
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
+
+# Credenciales locales
+.env
+src/main/resources/*.json
+src/main/resources/*firebase*.json
+src/main/resources/*adminsdk*.json
