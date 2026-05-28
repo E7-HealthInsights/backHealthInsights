@@ -15,5 +15,6 @@ public enum DatasetEstado {
     PENDING,
     PROCESSING,
     READY,
-    ERROR
+    ERROR,
+    INACTIVE
 }

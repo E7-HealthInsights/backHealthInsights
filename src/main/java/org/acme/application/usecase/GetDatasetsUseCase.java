@@ -20,7 +20,7 @@ public class GetDatasetsUseCase {
     }
 
     public List<Dataset> execute() {
-        return datasetRepository.findAllActive();
+        return datasetRepository.findAllDatasets();
     }
 
 }
