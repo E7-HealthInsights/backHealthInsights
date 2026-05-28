@@ -2,7 +2,7 @@ package org.acme.application.usecase;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.acme.application.dto.DeactivateDatasetDto;
+import org.acme.application.dto.ReactivateDatasetDto;
 import org.acme.domain.exception.DatasetNotFoundException;
 import org.acme.domain.repository.DatasetRepository;
 import org.acme.domain.repository.LogActividadRepository;
@@ -11,14 +11,14 @@ import org.acme.infrastructure.security.AuthContext;
 import java.util.UUID;
 
 @ApplicationScoped
-public class DeactivateDatasetUseCase {
+public class ReactivateDatasetUseCase {
 
     private final DatasetRepository datasetRepository;
     private final AuthContext authContext;
     private final LogActividadRepository logActividadRepository;
 
     @Inject
-    public DeactivateDatasetUseCase(DatasetRepository datasetRepository,
+    public ReactivateDatasetUseCase(DatasetRepository datasetRepository,
                                     AuthContext authContext,
                                     LogActividadRepository logActividadRepository) {
         this.datasetRepository = datasetRepository;
@@ -26,11 +26,11 @@ public class DeactivateDatasetUseCase {
         this.logActividadRepository = logActividadRepository;
     }
 
-    public void execute(UUID datasetId, DeactivateDatasetDto dto) {
+    public void execute(UUID datasetId, ReactivateDatasetDto dto) {
         datasetRepository.findDatasetById(datasetId)
                 .orElseThrow(() -> new DatasetNotFoundException(datasetId));
 
-        datasetRepository.deactivate(datasetId, authContext.getUser().getId().toString());
+        datasetRepository.reactivate(datasetId, authContext.getUser().getId().toString());
 
         if (dto != null) {
             logActividadRepository

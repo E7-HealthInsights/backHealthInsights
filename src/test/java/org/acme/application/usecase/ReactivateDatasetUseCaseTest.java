@@ -1,6 +1,6 @@
 package org.acme.application.usecase;
 
-import org.acme.application.dto.DeactivateDatasetDto;
+import org.acme.application.dto.ReactivateDatasetDto;
 import org.acme.domain.exception.DatasetNotFoundException;
 import org.acme.domain.models.Dataset;
 import org.acme.domain.models.DatasetEstado;
@@ -22,12 +22,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-class DeactivateDatasetUseCaseTest {
+class ReactivateDatasetUseCaseTest {
 
     private DatasetRepository datasetRepository;
     private AuthContext authContext;
     private LogActividadRepository logActividadRepository;
-    private DeactivateDatasetUseCase useCase;
+    private ReactivateDatasetUseCase useCase;
 
     private final UUID DATASET_ID = UUID.randomUUID();
     private final UUID ADMIN_ID   = UUID.randomUUID();
@@ -40,7 +40,7 @@ class DeactivateDatasetUseCaseTest {
         datasetRepository      = mock(DatasetRepository.class);
         authContext             = mock(AuthContext.class);
         logActividadRepository  = mock(LogActividadRepository.class);
-        useCase = new DeactivateDatasetUseCase(datasetRepository, authContext, logActividadRepository);
+        useCase = new ReactivateDatasetUseCase(datasetRepository, authContext, logActividadRepository);
 
         User adminUser = new User(ADMIN_ID, "Admin", "Test", "admin@test.com",
                 new Role((byte) 1, "ADMIN"), true, "firebase-admin");
@@ -49,23 +49,23 @@ class DeactivateDatasetUseCaseTest {
         existingDataset = new Dataset(
                 DATASET_ID, "Diabetes México 2023", "diabetes_mexico_2023",
                 "Casos de diabetes por entidad", "SINAVE",
-                null, null, DatasetEstado.READY, LocalDateTime.now()
+                null, null, DatasetEstado.INACTIVE, LocalDateTime.now()
         );
 
         logEntry = mock(LogActividad.class);
         when(logEntry.getId()).thenReturn(LOG_ID);
 
         when(datasetRepository.findDatasetById(DATASET_ID)).thenReturn(Optional.of(existingDataset));
-        doNothing().when(datasetRepository).deactivate(any(UUID.class), any(String.class));
+        doNothing().when(datasetRepository).reactivate(any(UUID.class), any(String.class));
         when(logActividadRepository.findLatestByEntidadId(DATASET_ID.toString()))
                 .thenReturn(Optional.of(logEntry));
     }
 
     @Test
-    void executeShouldCallDeactivateOnRepository() {
+    void executeShouldCallReactivateOnRepository() {
         useCase.execute(DATASET_ID, null);
 
-        verify(datasetRepository, times(1)).deactivate(eq(DATASET_ID), any(String.class));
+        verify(datasetRepository, times(1)).reactivate(eq(DATASET_ID), any(String.class));
     }
 
     @Test
@@ -74,39 +74,39 @@ class DeactivateDatasetUseCaseTest {
         when(datasetRepository.findDatasetById(unknownId)).thenReturn(Optional.empty());
 
         assertThrows(DatasetNotFoundException.class, () -> useCase.execute(unknownId, null));
-        verify(datasetRepository, never()).deactivate(any(UUID.class), any(String.class));
+        verify(datasetRepository, never()).reactivate(any(UUID.class), any(String.class));
     }
 
     @Test
-    void executeShouldNotCallDeactivateWhenDatasetNotFound() {
+    void executeShouldNotCallReactivateWhenDatasetNotFound() {
         UUID unknownId = UUID.randomUUID();
         when(datasetRepository.findDatasetById(unknownId)).thenReturn(Optional.empty());
 
         assertThrows(DatasetNotFoundException.class, () -> useCase.execute(unknownId, null));
 
-        verify(datasetRepository, never()).deactivate(eq(unknownId), any(String.class));
+        verify(datasetRepository, never()).reactivate(eq(unknownId), any(String.class));
     }
 
     @Test
     void executeShouldPassAdminIdAsModifiedBy() {
         useCase.execute(DATASET_ID, null);
 
-        verify(datasetRepository, times(1)).deactivate(DATASET_ID, ADMIN_ID.toString());
+        verify(datasetRepository, times(1)).reactivate(DATASET_ID, ADMIN_ID.toString());
     }
 
     @Test
     void executeShouldUpdateDetalleWhenJustificationProvided() {
-        DeactivateDatasetDto dto = new DeactivateDatasetDto();
-        dto.setJustification("Datos desactualizados");
+        ReactivateDatasetDto dto = new ReactivateDatasetDto();
+        dto.setJustification("Dataset revisado y aprobado");
 
         useCase.execute(DATASET_ID, dto);
 
-        verify(logActividadRepository, times(1)).updateDetalle(LOG_ID, "Datos desactualizados");
+        verify(logActividadRepository, times(1)).updateDetalle(LOG_ID, "Dataset revisado y aprobado");
     }
 
     @Test
     void executeShouldNotUpdateDetalleWhenJustificationIsNull() {
-        DeactivateDatasetDto dto = new DeactivateDatasetDto();
+        ReactivateDatasetDto dto = new ReactivateDatasetDto();
 
         useCase.execute(DATASET_ID, dto);
 
@@ -121,10 +121,10 @@ class DeactivateDatasetUseCaseTest {
     }
 
     @Test
-    void executeShouldLookUpDatasetBeforeDeactivating() {
+    void executeShouldLookUpDatasetBeforeReactivating() {
         useCase.execute(DATASET_ID, null);
 
         verify(datasetRepository, times(1)).findDatasetById(DATASET_ID);
-        verify(datasetRepository, times(1)).deactivate(eq(DATASET_ID), any(String.class));
+        verify(datasetRepository, times(1)).reactivate(eq(DATASET_ID), any(String.class));
     }
 }

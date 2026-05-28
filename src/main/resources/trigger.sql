@@ -3,6 +3,7 @@ USE `health_insights`;
 drop trigger if exists trg_usuario_after_insert;
 drop trigger if exists trg_usuario_after_update;
 drop trigger if exists trg_dataset_after_insert;
+drop trigger if exists trg_dataset_after_update;
 
 DELIMITER $$
 
@@ -90,6 +91,41 @@ BEGIN
         NEW.id,
         NOW()
     );
+END$$
+
+-- Trigger 4: AFTER UPDATE en Dataset
+-- Distingue entre desactivación y reactivación
+CREATE TRIGGER trg_dataset_after_update
+AFTER UPDATE ON Dataset
+FOR EACH ROW
+BEGIN
+    -- Desactivación
+    IF OLD.estado != 'INACTIVE' AND NEW.estado = 'INACTIVE' THEN
+        INSERT INTO LogActividad (
+            id, usuario_id, accion, detalle, entidad_tipo, entidad_id, fecha
+        ) VALUES (
+            UUID(),
+            NEW.modified_by,
+            CONCAT('Dataset desactivado: ', NEW.nombre),
+            CONCAT('Tabla: ', NEW.nombre_tabla, ' | Fuente: ', IFNULL(NEW.fuente, 'N/A')),
+            'DATASET',
+            NEW.id,
+            NOW()
+        );
+    -- Reactivación
+    ELSEIF OLD.estado = 'INACTIVE' AND NEW.estado = 'READY' THEN
+        INSERT INTO LogActividad (
+            id, usuario_id, accion, detalle, entidad_tipo, entidad_id, fecha
+        ) VALUES (
+            UUID(),
+            NEW.modified_by,
+            CONCAT('Dataset reactivado: ', NEW.nombre),
+            CONCAT('Tabla: ', NEW.nombre_tabla, ' | Fuente: ', IFNULL(NEW.fuente, 'N/A')),
+            'DATASET',
+            NEW.id,
+            NOW()
+        );
+    END IF;
 END$$
 
 DELIMITER ;

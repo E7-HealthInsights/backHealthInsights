@@ -70,7 +70,7 @@ class DatasetResourceTest {
         inactivo.setId(DATASET_INACTIVO_ID);
         inactivo.setNombre("Dataset Inactivo");
         inactivo.setNombreTabla("dataset_inactivo");
-        inactivo.setEstado(org.acme.domain.models.DatasetEstado.ERROR);
+        inactivo.setEstado(org.acme.domain.models.DatasetEstado.INACTIVE);
         inactivo.setFechaActualizacion(LocalDateTime.now());
         datasetRepository.persist(inactivo);
     }
@@ -238,7 +238,7 @@ class DatasetResourceTest {
                 .statusCode(400);
     }
 
-    // ── PATCH /datasets/{id} ──────────────────────────────────────────────────
+    // ── PATCH /datasets/{id}/desactivar ──────────────────────────────────────
 
     @Test
     void patchDatasetShouldReturn204WhenAdmin() {
@@ -247,7 +247,7 @@ class DatasetResourceTest {
                 .header("Authorization", "Bearer fake-token")
                 .body("{}")
                 .when()
-                .patch("/datasets/{id}", DATASET_ACTIVO_ID)
+                .patch("/datasets/{id}/desactivar", DATASET_ACTIVO_ID)
                 .then()
                 .statusCode(204);
     }
@@ -261,10 +261,62 @@ class DatasetResourceTest {
                 .header("Authorization", "Bearer fake-token")
                 .body("{}")
                 .when()
-                .patch("/datasets/{id}", unknownId)
+                .patch("/datasets/{id}/desactivar", unknownId)
                 .then()
                 .statusCode(404)
                 .body("message", notNullValue());
+    }
+
+    // ── PATCH /datasets/{id}/reactivar ────────────────────────────────────────
+
+    @Test
+    void reactivateDatasetShouldReturn204WhenAdmin() {
+        given()
+                .contentType(JSON)
+                .header("Authorization", "Bearer fake-token")
+                .body("{}")
+                .when()
+                .patch("/datasets/{id}/reactivar", DATASET_INACTIVO_ID)
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void reactivateDatasetShouldReturn404ForNonExistentDataset() {
+        UUID unknownId = UUID.randomUUID();
+
+        given()
+                .contentType(JSON)
+                .header("Authorization", "Bearer fake-token")
+                .body("{}")
+                .when()
+                .patch("/datasets/{id}/reactivar", unknownId)
+                .then()
+                .statusCode(404)
+                .body("message", notNullValue());
+    }
+
+    @Test
+    void reactivateDatasetShouldAppearAsReadyInGetDatasets() {
+        // Reactivamos el dataset inactivo
+        given()
+                .contentType(JSON)
+                .header("Authorization", "Bearer fake-token")
+                .body("{}")
+                .when()
+                .patch("/datasets/{id}/reactivar", DATASET_INACTIVO_ID)
+                .then()
+                .statusCode(204);
+
+        // Debe aparecer en GET /datasets con estado READY
+        given()
+                .contentType(JSON)
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .get("/datasets")
+                .then()
+                .statusCode(200)
+                .body("find { it.nombre == 'Dataset Inactivo' }.estado", equalTo("READY"));
     }
 
     @Test
@@ -275,7 +327,7 @@ class DatasetResourceTest {
                 .header("Authorization", "Bearer fake-token")
                 .body("{}")
                 .when()
-                .patch("/datasets/{id}", DATASET_ACTIVO_ID)
+                .patch("/datasets/{id}/desactivar", DATASET_ACTIVO_ID)
                 .then()
                 .statusCode(204);
 

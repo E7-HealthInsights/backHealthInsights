@@ -12,7 +12,8 @@ public interface DatasetRepository {
     Optional<Dataset> findDatasetById(UUID id);
     Dataset save(Dataset dataset);
     Dataset update(Dataset dataset);
-    void deactivate(UUID id);
+    void deactivate(UUID id, String modifiedBy);
+    void reactivate(UUID id, String modifiedBy);
     boolean existsByNombreTabla(String nombreTabla);
     Optional<Dataset> findByNombreTabla(String nombreTabla);
 }

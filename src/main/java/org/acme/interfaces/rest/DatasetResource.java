@@ -6,12 +6,13 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.acme.application.dto.DatasetResponseDto;
-import org.acme.application.dto.DeactivateDatasetDto;
 import org.acme.application.dto.ErrorResponseDto;
 import org.acme.application.dto.UploadDatasetDto;
+import org.acme.application.dto.DeactivateDatasetDto;
 import org.acme.application.usecase.DeactivateDatasetUseCase;
 import org.acme.application.usecase.GetDatasetsUseCase;
+import org.acme.application.dto.ReactivateDatasetDto;
+import org.acme.application.usecase.ReactivateDatasetUseCase;
 import org.acme.application.usecase.GetMetricasByDatasetUseCase;
 import org.acme.application.usecase.UploadDatasetUseCase;
 import org.acme.domain.exception.DatasetNotFoundException;
@@ -33,6 +34,7 @@ public class DatasetResource {
     @Inject GetMetricasByDatasetUseCase getMetricasByDatasetUseCase;
     @Inject UploadDatasetUseCase uploadDatasetUseCase;
     @Inject DeactivateDatasetUseCase deactivateDatasetUseCase;
+    @Inject ReactivateDatasetUseCase reactivateDatasetUseCase;
     @Inject DatasetRepository datasetRepository;
 
     /**
@@ -136,12 +138,37 @@ public class DatasetResource {
      * Desactiva lógicamente un dataset (soft delete) — solo ADMIN.
      */
     @PATCH
-    @Path("/{id}")
+    @Path("/{id}/desactivar")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("ADMIN")
     public Response deactivateDataset(@PathParam("id") UUID id, DeactivateDatasetDto dto) {
         try {
             deactivateDatasetUseCase.execute(id, dto);
+            return Response.noContent().build();
+
+        } catch (DatasetNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponseDto(e.getMessage()))
+                    .build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponseDto("Error interno del servidor"))
+                    .build();
+        }
+    }
+
+    /**
+     * PATCH /datasets/{id}/reactivar
+     * Reactiva un dataset INACTIVE devolviéndolo a READY — solo ADMIN.
+     */
+    @PATCH
+    @Path("/{id}/reactivar")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @RolesAllowed("ADMIN")
+    public Response reactivateDataset(@PathParam("id") UUID id, ReactivateDatasetDto dto) {
+        try {
+            reactivateDatasetUseCase.execute(id, dto);
             return Response.noContent().build();
 
         } catch (DatasetNotFoundException e) {

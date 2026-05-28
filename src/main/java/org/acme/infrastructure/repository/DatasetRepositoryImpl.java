@@ -38,12 +38,24 @@ public class DatasetRepositoryImpl implements DatasetRepository, PanacheReposito
 
     @Override
     @jakarta.transaction.Transactional
-    public void deactivate(UUID id) {
+    public void deactivate(UUID id, String modifiedBy) {
         DatasetEntity entity = findById(id);
         if (entity == null) {
             throw new jakarta.ws.rs.NotFoundException("Dataset no encontrado: " + id);
         }
         entity.setEstado(DatasetEstado.INACTIVE);
+        entity.setModifiedBy(modifiedBy);
+    }
+
+    @Override
+    @jakarta.transaction.Transactional
+    public void reactivate(UUID id, String modifiedBy) {
+        DatasetEntity entity = findById(id);
+        if (entity == null) {
+            throw new jakarta.ws.rs.NotFoundException("Dataset no encontrado: " + id);
+        }
+        entity.setEstado(DatasetEstado.READY);
+        entity.setModifiedBy(modifiedBy);
     }
 
     /**
