@@ -101,7 +101,7 @@ class DatasetResourceTest {
     }
 
     @Test
-    void getDatasetsShouldNotReturnInactiveDatasets() {
+    void getDatasetsShouldReturnAllDatasetsIncludingInactive() {
         given()
                 .contentType(JSON)
                 .header("Authorization", "Bearer fake-token")
@@ -109,7 +109,7 @@ class DatasetResourceTest {
                 .get("/datasets")
                 .then()
                 .statusCode(200)
-                .body("nombre", not(hasItem("Dataset Inactivo")));
+                .body("nombre", hasItem("Dataset Inactivo"));
     }
 
     @Test
@@ -236,5 +236,57 @@ class DatasetResourceTest {
                 .post("/datasets/upload")
                 .then()
                 .statusCode(400);
+    }
+
+    // ── PATCH /datasets/{id} ──────────────────────────────────────────────────
+
+    @Test
+    void patchDatasetShouldReturn204WhenAdmin() {
+        given()
+                .contentType(JSON)
+                .header("Authorization", "Bearer fake-token")
+                .body("{}")
+                .when()
+                .patch("/datasets/{id}", DATASET_ACTIVO_ID)
+                .then()
+                .statusCode(204);
+    }
+
+    @Test
+    void patchDatasetShouldReturn404ForNonExistentDataset() {
+        UUID unknownId = UUID.randomUUID();
+
+        given()
+                .contentType(JSON)
+                .header("Authorization", "Bearer fake-token")
+                .body("{}")
+                .when()
+                .patch("/datasets/{id}", unknownId)
+                .then()
+                .statusCode(404)
+                .body("message", notNullValue());
+    }
+
+    @Test
+    void patchDatasetShouldAppearAsInactiveInGetDatasets() {
+        // Desactivamos el dataset activo
+        given()
+                .contentType(JSON)
+                .header("Authorization", "Bearer fake-token")
+                .body("{}")
+                .when()
+                .patch("/datasets/{id}", DATASET_ACTIVO_ID)
+                .then()
+                .statusCode(204);
+
+        // Sigue apareciendo en GET /datasets pero con estado INACTIVE
+        given()
+                .contentType(JSON)
+                .header("Authorization", "Bearer fake-token")
+                .when()
+                .get("/datasets")
+                .then()
+                .statusCode(200)
+                .body("find { it.nombre == 'Diabetes México 2023' }.estado", equalTo("INACTIVE"));
     }
 }

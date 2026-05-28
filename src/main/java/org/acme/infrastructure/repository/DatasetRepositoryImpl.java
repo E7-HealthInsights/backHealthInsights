@@ -16,14 +16,9 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class DatasetRepositoryImpl implements DatasetRepository, PanacheRepositoryBase<DatasetEntity, UUID> {
 
-    /**
-     * Devuelve datasets en estado READY (visibles para el usuario final).
-     * Los que están en PENDING, PROCESSING o ERROR no se exponen en el listado.
-     */
     @Override
-    public List<Dataset> findAllActive() {
-        return find("estado", DatasetEstado.READY)
-                .list()
+    public List<Dataset> findAllDatasets() {
+        return listAll()
                 .stream()
                 .map(DatasetMapper::toDomain)
                 .collect(Collectors.toList());
@@ -39,6 +34,16 @@ public class DatasetRepositoryImpl implements DatasetRepository, PanacheReposito
         DatasetEntity entity = DatasetMapper.toEntity(dataset);
         persist(entity);
         return DatasetMapper.toDomain(entity);
+    }
+
+    @Override
+    @jakarta.transaction.Transactional
+    public void deactivate(UUID id) {
+        DatasetEntity entity = findById(id);
+        if (entity == null) {
+            throw new jakarta.ws.rs.NotFoundException("Dataset no encontrado: " + id);
+        }
+        entity.setEstado(DatasetEstado.INACTIVE);
     }
 
     /**

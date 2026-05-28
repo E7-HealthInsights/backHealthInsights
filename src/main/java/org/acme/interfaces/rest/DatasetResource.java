@@ -7,11 +7,14 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.application.dto.DatasetResponseDto;
+import org.acme.application.dto.DeactivateDatasetDto;
 import org.acme.application.dto.ErrorResponseDto;
 import org.acme.application.dto.UploadDatasetDto;
+import org.acme.application.usecase.DeactivateDatasetUseCase;
 import org.acme.application.usecase.GetDatasetsUseCase;
 import org.acme.application.usecase.GetMetricasByDatasetUseCase;
 import org.acme.application.usecase.UploadDatasetUseCase;
+import org.acme.domain.exception.DatasetNotFoundException;
 import org.acme.domain.exception.TableAlreadyExistsException;
 import org.acme.domain.models.Dataset;
 import org.acme.domain.repository.DatasetRepository;
@@ -29,6 +32,7 @@ public class DatasetResource {
     @Inject GetDatasetsUseCase getDatasetsUseCase;
     @Inject GetMetricasByDatasetUseCase getMetricasByDatasetUseCase;
     @Inject UploadDatasetUseCase uploadDatasetUseCase;
+    @Inject DeactivateDatasetUseCase deactivateDatasetUseCase;
     @Inject DatasetRepository datasetRepository;
 
     /**
@@ -123,6 +127,31 @@ public class DatasetResource {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(new ErrorResponseDto(
                             e.getMessage() != null ? e.getMessage() : "Error interno del servidor"))
+                    .build();
+        }
+    }
+
+    /**
+     * PATCH /datasets/{id}
+     * Desactiva lógicamente un dataset (soft delete) — solo ADMIN.
+     */
+    @PATCH
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @RolesAllowed("ADMIN")
+    public Response deactivateDataset(@PathParam("id") UUID id, DeactivateDatasetDto dto) {
+        try {
+            deactivateDatasetUseCase.execute(id, dto);
+            return Response.noContent().build();
+
+        } catch (DatasetNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ErrorResponseDto(e.getMessage()))
+                    .build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ErrorResponseDto("Error interno del servidor"))
                     .build();
         }
     }

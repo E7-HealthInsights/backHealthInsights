@@ -8,10 +8,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface DatasetRepository {
-    List<Dataset> findAllActive();
+    List<Dataset> findAllDatasets();
     Optional<Dataset> findDatasetById(UUID id);
     Dataset save(Dataset dataset);
     Dataset update(Dataset dataset);
+    void deactivate(UUID id);
     boolean existsByNombreTabla(String nombreTabla);
     Optional<Dataset> findByNombreTabla(String nombreTabla);
 }

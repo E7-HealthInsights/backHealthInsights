@@ -41,11 +41,11 @@ class GetDatasetsUseCaseTest {
     // ── Tests ─────────────────────────────────────────────────────────────────
 
     @Test
-    void executeShouldReturnAllActiveDatasets() {
+    void executeShouldReturnAllDatasets() {
         Dataset d1 = buildDataset("Diabetes México 2023", DatasetEstado.READY);
-        Dataset d2 = buildDataset("Hipertensión 2022", DatasetEstado.READY);
+        Dataset d2 = buildDataset("Hipertensión 2022", DatasetEstado.INACTIVE);
 
-        when(datasetRepository.findAllActive()).thenReturn(List.of(d1, d2));
+        when(datasetRepository.findAllDatasets()).thenReturn(List.of(d1, d2));
 
         List<Dataset> result = useCase.execute();
 
@@ -53,33 +53,29 @@ class GetDatasetsUseCaseTest {
         assertEquals(2, result.size());
         assertEquals("Diabetes México 2023", result.get(0).getNombre());
         assertEquals("Hipertensión 2022", result.get(1).getNombre());
-        verify(datasetRepository, times(1)).findAllActive();
+        verify(datasetRepository, times(1)).findAllDatasets();
     }
 
     @Test
-    void executeShouldReturnEmptyListWhenNoActiveDatasetsExist() {
-        when(datasetRepository.findAllActive()).thenReturn(List.of());
+    void executeShouldReturnEmptyListWhenNoDatasetsExist() {
+        when(datasetRepository.findAllDatasets()).thenReturn(List.of());
 
         List<Dataset> result = useCase.execute();
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(datasetRepository, times(1)).findAllActive();
+        verify(datasetRepository, times(1)).findAllDatasets();
     }
 
     @Test
-    void executeShouldDelegateFilteringToRepository() {
-        // El use case confía en que el repositorio ya filtró por estado=true.
-        // Verifica que nunca hace filtrado propio — solo delega y retorna.
+    void executeShouldDelegateFetchingToRepository() {
         Dataset d1 = buildDataset("Obesidad 2021", DatasetEstado.READY);
-        when(datasetRepository.findAllActive()).thenReturn(List.of(d1));
+        when(datasetRepository.findAllDatasets()).thenReturn(List.of(d1));
 
         List<Dataset> result = useCase.execute();
 
         assertEquals(1, result.size());
-        assertEquals(org.acme.domain.models.DatasetEstado.READY, result.get(0).getEstado());
-        // Solo se llama a findAllActive, nunca a findDatasetById ni otro método
-        verify(datasetRepository, times(1)).findAllActive();
+        verify(datasetRepository, times(1)).findAllDatasets();
         verifyNoMoreInteractions(datasetRepository);
     }
 
@@ -89,7 +85,7 @@ class GetDatasetsUseCaseTest {
         d.setFuente("SINAVE / Secretaría de Salud");
         d.setLink("https://sinave.gob.mx");
 
-        when(datasetRepository.findAllActive()).thenReturn(List.of(d));
+        when(datasetRepository.findAllDatasets()).thenReturn(List.of(d));
 
         List<Dataset> result = useCase.execute();
 
