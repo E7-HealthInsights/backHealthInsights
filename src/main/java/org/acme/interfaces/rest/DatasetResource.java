@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.Response;
 import org.acme.application.dto.ErrorResponseDto;
 import org.acme.application.dto.MetricaResponseDto;
 import org.acme.application.dto.UploadDatasetDto;
+import org.acme.application.dto.DatasetResponseDto;
 import org.acme.application.dto.DeactivateDatasetDto;
 import org.acme.application.usecase.DeactivateDatasetUseCase;
 import org.acme.application.usecase.GetDatasetsUseCase;
@@ -200,15 +201,27 @@ public class DatasetResource {
         }
     }
 
-    /**
-     * PATCH /datasets/{id}
-     * Desactiva lógicamente un dataset (soft delete) — solo ADMIN.
-     */
     @PATCH
     @Path("/{id}/desactivar")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("ADMIN")
-    public Response deactivateDataset(@PathParam("id") UUID id, DeactivateDatasetDto dto) {
+    @Operation(
+        summary     = "Desactivar dataset",
+        description = "Baja lógica del dataset (soft delete). El dataset pasa a estado INACTIVE y deja de aparecer en el listado. Requiere JWT de Firebase. Solo ADMIN."
+    )
+    @APIResponses({
+        @APIResponse(responseCode = "204", description = "Dataset desactivado exitosamente"),
+        @APIResponse(responseCode = "401", description = "Sin autenticación"),
+        @APIResponse(responseCode = "403", description = "Solo ADMIN"),
+        @APIResponse(responseCode = "404", description = "Dataset no encontrado",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+        @APIResponse(responseCode = "500", description = "Error interno del servidor",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    public Response deactivateDataset(
+        @Parameter(description = "UUID del dataset a desactivar", in = ParameterIn.PATH, required = true)
+        @PathParam("id") UUID id,
+        DeactivateDatasetDto dto) {
         try {
             deactivateDatasetUseCase.execute(id, dto);
             return Response.noContent().build();
@@ -225,15 +238,27 @@ public class DatasetResource {
         }
     }
 
-    /**
-     * PATCH /datasets/{id}/reactivar
-     * Reactiva un dataset INACTIVE devolviéndolo a READY — solo ADMIN.
-     */
     @PATCH
     @Path("/{id}/reactivar")
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed("ADMIN")
-    public Response reactivateDataset(@PathParam("id") UUID id, ReactivateDatasetDto dto) {
+    @Operation(
+        summary     = "Reactivar dataset",
+        description = "Reactiva un dataset en estado INACTIVE devolviéndolo a READY. Vuelve a aparecer en el listado para consulta. Requiere JWT de Firebase. Solo ADMIN."
+    )
+    @APIResponses({
+        @APIResponse(responseCode = "204", description = "Dataset reactivado exitosamente"),
+        @APIResponse(responseCode = "401", description = "Sin autenticación"),
+        @APIResponse(responseCode = "403", description = "Solo ADMIN"),
+        @APIResponse(responseCode = "404", description = "Dataset no encontrado",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+        @APIResponse(responseCode = "500", description = "Error interno del servidor",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    public Response reactivateDataset(
+        @Parameter(description = "UUID del dataset a reactivar", in = ParameterIn.PATH, required = true)
+        @PathParam("id") UUID id,
+        ReactivateDatasetDto dto) {
         try {
             reactivateDatasetUseCase.execute(id, dto);
             return Response.noContent().build();
