@@ -1,0 +1,115 @@
+package org.acme.application.dto;
+
+import java.util.Map;
+import java.util.UUID;
+
+public class WidgetResponseDto {
+    private UUID id;
+    private String titulo;
+    private String subtitulo;
+    private String seriesName;
+    private String xAxisLabel;
+    private String yAxisLabel;
+    private String tipo;
+    private int orden;
+    private String tipoSemantico;
+    private String nivelGeografico;
+    private Map<String, Object> data;
+    private boolean esDefault;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getTitulo() {
+        return titulo;
+    }
+
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public int getOrden() {
+        return orden;
+    }
+
+    public void setOrden(int orden) {
+        this.orden = orden;
+    }
+
+    public Map<String, Object> getData() {
+        return data;
+    }
+
+    public void setData(Map<String, Object> data) {
+        this.data = data;
+    }
+
+    public String getSubtitulo() {
+        return subtitulo;
+    }
+
+    public void setSubtitulo(String subtitulo) {
+        this.subtitulo = subtitulo;
+    }
+
+    public String getSeriesName() {
+        return seriesName;
+    }
+
+    public void setSeriesName(String seriesName) {
+        this.seriesName = seriesName;
+    }
+
+    public String getxAxisLabel() {
+        return xAxisLabel;
+    }
+
+    public void setxAxisLabel(String xAxisLabel) {
+        this.xAxisLabel = xAxisLabel;
+    }
+
+    public String getyAxisLabel() {
+        return yAxisLabel;
+    }
+
+    public void setyAxisLabel(String yAxisLabel) {
+        this.yAxisLabel = yAxisLabel;
+    }
+
+    public String getTipoSemantico() {
+        return tipoSemantico;
+    }
+
+    public void setTipoSemantico(String tipoSemantico) {
+        this.tipoSemantico = tipoSemantico;
+    }
+
+    public String getNivelGeografico() {
+        return nivelGeografico;
+    }
+
+    public void setNivelGeografico(String nivelGeografico) {
+        this.nivelGeografico = nivelGeografico;
+    }
+
+    public boolean isEsDefault() {
+        return esDefault;
+    }
+
+    public void setEsDefault(boolean esDefault) {
+        this.esDefault = esDefault;
+    }
+}
