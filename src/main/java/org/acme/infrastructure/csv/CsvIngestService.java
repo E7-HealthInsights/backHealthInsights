@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Servicio de infraestructura responsable de:
@@ -32,6 +33,17 @@ public class CsvIngestService {
 
     private static final Logger LOG = Logger.getLogger(CsvIngestService.class);
     private static final int BATCH_SIZE = 500;
+
+    /** Identificador de tabla seguro: solo minúsculas, dígitos y guion bajo (1-64). */
+    private static final Pattern TABLE_NAME_PATTERN = Pattern.compile("^[a-z0-9_]{1,64}$");
+
+    /**
+     * Whitelist de tipos SQL permitidos. Debe coincidir con el @Pattern de
+     * ColumnDefinitionDto: este servicio recibe los datos vía Kafka, donde la
+     * bean validation del REST NO se ejecuta, así que revalidamos aquí.
+     */
+    private static final Pattern SQL_TYPE_PATTERN = Pattern.compile(
+            "^(VARCHAR\\(255\\)|TEXT|INT|BIGINT|DECIMAL\\(10,2\\)|FLOAT|DOUBLE|BOOLEAN|DATE|DATETIME|TIMESTAMP|JSON)$");
 
     @Inject
     DataSource dataSource;
@@ -51,7 +63,8 @@ public class CsvIngestService {
             InputStream csvStream
     ) throws SQLException, IOException {
 
-        String ddl = buildCreateTable(nombreTabla, columnas);
+        String safeTableName = validateTableName(nombreTabla);
+        String ddl = buildCreateTable(safeTableName, columnas);
         LOG.infof("Creando tabla dinámica: %s", ddl);
 
         try (Connection conn = dataSource.getConnection()) {
@@ -62,14 +75,14 @@ public class CsvIngestService {
 
             // 2 — Insertar datos en batch
             try {
-                insertarEnBatch(conn, nombreTabla, columnas, csvStream);
+                insertarEnBatch(conn, safeTableName, columnas, csvStream);
             } catch (Exception e) {
                 // Si falla la carga de datos, eliminamos la tabla para dejar la BD limpia
-                LOG.warnf("Error al insertar datos en '%s'. Haciendo DROP TABLE para limpiar.", nombreTabla);
+                LOG.warnf("Error al insertar datos en '%s'. Haciendo DROP TABLE para limpiar.", safeTableName);
                 try (Statement dropStmt = conn.createStatement()) {
-                    dropStmt.execute("DROP TABLE IF EXISTS `" + nombreTabla + "`");
+                    dropStmt.execute("DROP TABLE IF EXISTS `" + safeTableName + "`");
                 } catch (SQLException dropEx) {
-                    LOG.errorf("No se pudo hacer DROP TABLE '%s': %s", nombreTabla, dropEx.getMessage());
+                    LOG.errorf("No se pudo hacer DROP TABLE '%s': %s", safeTableName, dropEx.getMessage());
                 }
                 throw e; // re-lanzar para que el use case haga rollback JPA
             }
@@ -81,27 +94,56 @@ public class CsvIngestService {
      * después del DDL pero antes de que termine la transacción JPA.
      */
     public void dropTablaIfExists(String nombreTabla) {
+        String safeTableName = validateTableName(nombreTabla);
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("DROP TABLE IF EXISTS `" + nombreTabla + "`");
-            LOG.infof("DROP TABLE '%s' ejecutado correctamente.", nombreTabla);
+            stmt.execute("DROP TABLE IF EXISTS `" + safeTableName + "`");
+            LOG.infof("DROP TABLE '%s' ejecutado correctamente.", safeTableName);
         } catch (SQLException e) {
-            LOG.errorf("Error al hacer DROP TABLE '%s': %s", nombreTabla, e.getMessage());
+            LOG.errorf("Error al hacer DROP TABLE '%s': %s", safeTableName, e.getMessage());
         }
     }
 
     // ── Privados ─────────────────────────────────────────────────────────────
 
+    /**
+     * Valida que el nombre de tabla sea un identificador SQL seguro.
+     * Defensa en profundidad: aunque el nombre se genera con slugify() en el
+     * use case, este servicio lo recibe vía Kafka (frontera de confianza donde
+     * la validación del REST no aplica), así que lo revalidamos aquí.
+     *
+     * @throws IllegalArgumentException si el nombre no es un identificador seguro.
+     */
+    private String validateTableName(String nombreTabla) {
+        if (nombreTabla == null || !TABLE_NAME_PATTERN.matcher(nombreTabla).matches()) {
+            throw new IllegalArgumentException("Nombre de tabla inválido: " + nombreTabla);
+        }
+        return nombreTabla;
+    }
+
+    /**
+     * Valida que el tipo SQL esté en la whitelist permitida (misma que el DTO).
+     * Necesario porque el consumer Kafka no ejecuta bean validation.
+     *
+     * @throws IllegalArgumentException si el tipo no está permitido.
+     */
+    private String validateSqlType(String sqlType) {
+        if (sqlType == null || !SQL_TYPE_PATTERN.matcher(sqlType).matches()) {
+            throw new IllegalArgumentException("Tipo SQL no permitido: " + sqlType);
+        }
+        return sqlType;
+    }
+
     private String buildCreateTable(String nombreTabla, List<ColumnDefinitionDto> columnas) {
         StringBuilder sb = new StringBuilder();
-        sb.append("CREATE TABLE `").append(nombreTabla).append("` (");
+        sb.append("CREATE TABLE `").append(validateTableName(nombreTabla)).append("` (");
         sb.append("`_id` BIGINT AUTO_INCREMENT PRIMARY KEY, ");
 
         for (int i = 0; i < columnas.size(); i++) {
             ColumnDefinitionDto col = columnas.get(i);
             // Backtick para soportar nombres con espacios o caracteres especiales
             sb.append("`").append(sanitizeColumnName(col.getOriginalName())).append("` ");
-            sb.append(col.getSqlType());
+            sb.append(validateSqlType(col.getSqlType()));
             sb.append(" NULL");
             if (i < columnas.size() - 1) sb.append(", ");
         }
@@ -175,7 +217,7 @@ public class CsvIngestService {
 
     private String buildInsertSql(String nombreTabla, List<ColumnDefinitionDto> columnas) {
         StringBuilder sb = new StringBuilder();
-        sb.append("INSERT INTO `").append(nombreTabla).append("` (");
+        sb.append("INSERT INTO `").append(validateTableName(nombreTabla)).append("` (");
 
         for (int i = 0; i < columnas.size(); i++) {
             sb.append("`").append(sanitizeColumnName(columnas.get(i).getOriginalName())).append("`");
