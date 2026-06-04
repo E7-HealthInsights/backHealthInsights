@@ -27,24 +27,24 @@ public class LogActividadRepositoryImpl implements LogActividadRepository, Panac
     @Override
     public List<LogActividad> findAllLogs() {
         return em.createQuery(
-                "SELECT new org.acme.domain.models.LogActividad(" +
-                "   l.id, l.accion, l.detalle, l.entidadTipo, l.entidadId, l.fecha, " +
-                "   CONCAT(CONCAT(u.name, ' '), u.lastName)" +
-                ") " +
-                "FROM LogActividadEntity l " +
-                "LEFT JOIN l.usuario u " +
-                "ORDER BY l.fecha DESC",
-                LogActividad.class)
+                        "SELECT new org.acme.domain.models.LogActividad(" +
+                                "   l.id, l.accion, l.detalle, l.entidadTipo, l.entidadId, l.fecha, " +
+                                "   CONCAT(CONCAT(u.name, ' '), u.lastName)" +
+                                ") " +
+                                "FROM LogActividadEntity l " +
+                                "LEFT JOIN l.usuario u " +
+                                "ORDER BY l.fecha DESC",
+                        LogActividad.class)
                 .getResultList();
     }
 
     @Override
     public Optional<LogActividad> findLatestByEntidadId(String entidadId) {
         return em.createQuery(
-                "SELECT l FROM LogActividadEntity l " +
-                "WHERE l.entidadId = :entidadId " +
-                "ORDER BY l.fecha DESC",
-                LogActividadEntity.class)
+                        "SELECT l FROM LogActividadEntity l " +
+                                "WHERE l.entidadId = :entidadId " +
+                                "ORDER BY l.fecha DESC",
+                        LogActividadEntity.class)
                 .setParameter("entidadId", entidadId)
                 .setMaxResults(1)
                 .getResultStream()
@@ -56,9 +56,9 @@ public class LogActividadRepositoryImpl implements LogActividadRepository, Panac
     @Transactional
     public void updateDetalle(UUID logId, String detalle) {
         em.createQuery(
-                "UPDATE LogActividadEntity l " +
-                "SET l.detalle = :detalle " +
-                "WHERE l.id = :id")
+                        "UPDATE LogActividadEntity l " +
+                                "SET l.detalle = :detalle " +
+                                "WHERE l.id = :id")
                 .setParameter("detalle", detalle)
                 .setParameter("id", logId)
                 .executeUpdate();
@@ -68,21 +68,21 @@ public class LogActividadRepositoryImpl implements LogActividadRepository, Panac
     public List<LogActividad> findPaginated(int page, int size, String search) {
         int offset = (page - 1) * size;
         String like = search != null && !search.isBlank()
-            ? "%" + search.toLowerCase() + "%"
-            : null;
+                ? "%" + search.toLowerCase() + "%"
+                : null;
 
         var query = em.createNativeQuery(
-                "SELECT l.id, l.accion, l.detalle, l.entidad_tipo, " +
-                "l.entidad_id, l.fecha, " +
-                "CONCAT(u.name, ' ', u.last_name) AS admin_nombre " +
-                "FROM LogActividad l " +
-                "LEFT JOIN Users u ON u.id = l.usuario_id " +
-                (like != null ? "WHERE LOWER(l.accion) LIKE :like OR LOWER(l.detalle) LIKE :like OR LOWER(CONCAT(u.name, ' ', u.last_name)) LIKE :like " : "") +
-                "ORDER BY l.fecha DESC " +
-                "LIMIT :size OFFSET :offset"
-        )
-        .setParameter("size", size)
-        .setParameter("offset", offset);
+                        "SELECT l.id, l.accion, l.detalle, l.entidad_tipo, " +
+                                "l.entidad_id, l.fecha, " +
+                                "CONCAT(u.nombre, ' ', u.apellido) AS admin_nombre " +
+                                "FROM LogActividad l " +
+                                "LEFT JOIN Usuario u ON u.id = l.usuario_id " +
+                                (like != null ? "WHERE LOWER(l.accion) LIKE :like OR LOWER(l.detalle) LIKE :like OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE :like " : "") +
+                                "ORDER BY l.fecha DESC " +
+                                "LIMIT :size OFFSET :offset"
+                )
+                .setParameter("size", size)
+                .setParameter("offset", offset);
 
         if (like != null) {
             query.setParameter("like", like);
@@ -113,12 +113,12 @@ public class LogActividadRepositoryImpl implements LogActividadRepository, Panac
                 : null;
 
         String sql =
-            "SELECT COUNT(*) FROM LogActividad l " +
-            "LEFT JOIN Users u ON u.id = l.usuario_id " +
-            (like != null ?
-            "WHERE LOWER(l.accion) LIKE :like " +
-            "OR LOWER(l.detalle) LIKE :like " +
-            "OR LOWER(CONCAT(u.name, ' ', u.last_name)) LIKE :like " : "");
+                "SELECT COUNT(*) FROM LogActividad l " +
+                        "LEFT JOIN Usuario u ON u.id = l.usuario_id " +
+                        (like != null ?
+                                "WHERE LOWER(l.accion) LIKE :like " +
+                                        "OR LOWER(l.detalle) LIKE :like " +
+                                        "OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE :like " : "");
 
         var query = em.createNativeQuery(sql);
         if (like != null) query.setParameter("like", like);

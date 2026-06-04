@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Users")
+@Table(name = "Usuario")
 @NamedEntityGraphs({   // definimos grafos de entidades para controlar qué relaciones se cargan automáticamente al recuperar un Entity
         @NamedEntityGraph(name = "User.full",    //Full es el grafo que carga todas las relaciones
                 attributeNodes = {
@@ -22,27 +22,27 @@ public class UserEntity {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @Column(name = "name", nullable = false, length = 255)
+    @Column(name = "nombre", nullable = false, length = 255)
     private String name;
 
-    @Column(name = "last_name", nullable = false, length = 255)
+    @Column(name = "apellido", nullable = false, length = 255)
     private String lastName;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(name = "correo", nullable = false, unique = true, length = 255)
     private String email;
 
-    //Columna de roles - fk a role
+    //Columna de roles - fk a rol
     @ManyToOne(fetch = FetchType.LAZY, optional = false)  //relación de muchos a uno con UserEntity, cada usuario tiene un rol, pero un rol puede tener muchos usuarios
-    @JoinColumn(name = "role_id", nullable = false)   //le ponemos nombre a la columna de la clave foranea por convencion mysql
+    @JoinColumn(name = "rol_id", nullable = false)   //le ponemos nombre a la columna de la clave foranea por convencion mysql
     private RoleEntity role;
 
-    @Column(nullable = false)
+    @Column(name = "estatus", nullable = false)
     private boolean status;
 
-    @Column(name = "provider_id", nullable = false, unique = true)
+    @Column(name = "proveedor_id", nullable = false, unique = true)
     private String providerId;
 
-    @Column(name = "modified_by", length = 36)
+    @Column(name = "modificado_por", length = 36)
     private String modifiedBy;
 
     public UUID getId() {

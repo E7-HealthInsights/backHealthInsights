@@ -27,30 +27,30 @@ class ProyeccionRepositoryImplTest {
     private static final UUID TEST_USER_ID =
             UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-            @BeforeEach
-            @Transactional
-            void setUp() {
-                // Limpia proyecciones del test anterior
-                em.createQuery("DELETE FROM ProyeccionEntity p WHERE p.usuario.id = :uid")
-                        .setParameter("uid", TEST_USER_ID)
-                        .executeUpdate();
-            
-                // MERGE INTO — inserta si no existe, no falla si ya existe
-                // Bypasea el entity tracking de Hibernate → sin OptimisticLock
-                em.createNativeQuery(
-                    "MERGE INTO Role (id, name) KEY(id) VALUES (1, 'ADMIN')"
-                ).executeUpdate();
-            
-                em.createNativeQuery(
-                    "MERGE INTO Tipo_de_Grafica (id, nombre) KEY(id) VALUES (1, 'STAT')"
-                ).executeUpdate();
-            
-                em.createNativeQuery(
-                    "MERGE INTO Users (id, name, last_name, email, role_id, status, provider_id) " +
-                    "KEY(id) VALUES " +
-                    "('00000000-0000-0000-0000-000000000001', 'Test', 'Admin', 'test@test.com', 1, true, 'test-firebase-uid')"
-                ).executeUpdate();
-            }
+    @BeforeEach
+    @Transactional
+    void setUp() {
+        // Limpia proyecciones del test anterior
+        em.createQuery("DELETE FROM ProyeccionEntity p WHERE p.usuario.id = :uid")
+                .setParameter("uid", TEST_USER_ID)
+                .executeUpdate();
+
+        // MERGE INTO — inserta si no existe, no falla si ya existe
+        // Bypasea el entity tracking de Hibernate → sin OptimisticLock
+        em.createNativeQuery(
+                "MERGE INTO Rol (id, nombre) KEY(id) VALUES (1, 'ADMIN')"
+        ).executeUpdate();
+
+        em.createNativeQuery(
+                "MERGE INTO Tipo_de_Grafica (id, nombre) KEY(id) VALUES (1, 'STAT')"
+        ).executeUpdate();
+
+        em.createNativeQuery(
+                "MERGE INTO Usuario (id, nombre, apellido, correo, rol_id, estatus, proveedor_id) " +
+                        "KEY(id) VALUES " +
+                        "('00000000-0000-0000-0000-000000000001', 'Test', 'Admin', 'test@test.com', 1, true, 'test-firebase-uid')"
+        ).executeUpdate();
+    }
 
     private Proyeccion buildProyeccion(String titulo) {
         User usuario = new User();

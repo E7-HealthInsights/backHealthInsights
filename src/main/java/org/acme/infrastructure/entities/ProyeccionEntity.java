@@ -10,10 +10,10 @@ import java.util.UUID;
 @Entity
 @Table(name = "Proyeccion")
 @NamedEntityGraph(
-    name = "Proyeccion.withUsuario",
-    attributeNodes = {
-        @NamedAttributeNode("usuario")
-    }
+        name = "Proyeccion.withUsuario",
+        attributeNodes = {
+                @NamedAttributeNode("usuario")
+        }
 )
 
 public class ProyeccionEntity {
@@ -22,7 +22,7 @@ public class ProyeccionEntity {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @Column(name = "title", nullable = false, length = 100)
+    @Column(name = "titulo", nullable = false, length = 100)
     private String titulo;
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
