@@ -7,14 +7,14 @@ import org.hibernate.type.SqlTypes;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Role")
+@Table(name = "Rol")
 public class RoleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)   //le decimos a la base de datos que se encargue de generar el id, en este caso un byte autoincremental
     private Byte id;
 
-    @Column(name = "name", nullable = false, length = 255)
+    @Column(name = "nombre", nullable = false, length = 255)
     private String name;
 
     public Byte getId() {
