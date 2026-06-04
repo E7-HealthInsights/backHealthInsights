@@ -18,6 +18,9 @@ public class UpdateUserDto {
 
     private String justification;
 
+    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+    private String password;
+
     public String getName() {
         return name;
     }
@@ -57,5 +60,8 @@ public class UpdateUserDto {
     public void setJustification(String justification) {
         this.justification = justification;
     }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
 }
