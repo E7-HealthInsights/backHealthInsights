@@ -12,6 +12,10 @@ import org.acme.domain.repository.RoleRepository;
 import org.acme.domain.repository.UserRepository;
 import org.acme.infrastructure.security.AuthContext;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
+
 import java.util.UUID;
 
 @ApplicationScoped
@@ -44,6 +48,19 @@ public class UpdateUserUseCase {
         if (dto.getLastName() != null) user.setLastName(dto.getLastName());
         if (dto.getStatus() != null) user.setStatus(dto.getStatus());
         user.setModifiedBy(authContext.getUser().getId().toString());
+
+        // Cambio de contraseña en Firebase — solo si viene en el dto
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            try {
+                UserRecord.UpdateRequest request =
+                        new UserRecord.UpdateRequest(user.getProviderId())
+                                .setPassword(dto.getPassword());
+                FirebaseAuth.getInstance().updateUser(request);
+            } catch (FirebaseAuthException e) {
+                throw new RuntimeException("Error al actualizar contraseña en Firebase: "
+                        + e.getMessage(), e);
+            }
+        }
 
         // 1 — Actualiza usuario (trigger dispara → LogActividad creado)
         User updatedUser = userRepository.update(user);
