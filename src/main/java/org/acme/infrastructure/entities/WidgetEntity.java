@@ -35,7 +35,7 @@ public class WidgetEntity {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @Column(name = "title", nullable = false, length = 100)
+    @Column(name = "titulo", nullable = false, length = 100)
     private String titulo;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)

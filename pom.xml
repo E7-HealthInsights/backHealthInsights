@@ -91,6 +91,19 @@
             <artifactId>quarkus-messaging-kafka</artifactId>
         </dependency>
 
+        <!-- ── Smallrye In-Memory connector (tests) ──────────────────────── -->
+        <!--
+            Reemplaza el conector Kafka durante @QuarkusTest.
+            Activado vía %test.mp.messaging.*.connector=smallrye-in-memory
+            en application.properties. Sin esta dependencia Quarkus falla
+            al levantar el contexto de pruebas con un WiringException.
+        -->
+        <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>smallrye-reactive-messaging-in-memory</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- ── Google Cloud Storage ──────────────────────────────────────── -->
         <!--
             SDK oficial de GCS. Se configura con Application Default Credentials
