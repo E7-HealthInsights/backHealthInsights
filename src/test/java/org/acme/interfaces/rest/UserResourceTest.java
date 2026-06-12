@@ -83,7 +83,9 @@ class UserResourceTest {
     @Test
     void deactivateUserShouldReturn204WhenUserExists() {
         given()
+                .contentType(JSON)
                 .header("Authorization", "Bearer fake-token")
+                .body("{}")
                 .when()
                 .patch("/users/{id}", TEST_USER_ID)
                 .then()
@@ -95,7 +97,9 @@ class UserResourceTest {
         UUID unknownId = UUID.randomUUID();
 
         given()
+                .contentType(JSON)
                 .header("Authorization", "Bearer fake-token")
+                .body("{}")
                 .when()
                 .patch("/users/{id}", unknownId)
                 .then()
@@ -106,7 +110,9 @@ class UserResourceTest {
     @Test
     void deactivateUserShouldSetStatusFalseInDatabase() {
         given()
+                .contentType(JSON)
                 .header("Authorization", "Bearer fake-token")
+                .body("{}")
                 .when()
                 .patch("/users/{id}", TEST_USER_ID)
                 .then()
@@ -115,10 +121,10 @@ class UserResourceTest {
         given()
                 .header("Authorization", "Bearer fake-token")
                 .when()
-                .get("/users")
+                .get("/users?status=false")
                 .then()
                 .statusCode(200)
-                .body("find { it.id == '" + TEST_USER_ID + "' }.status", equalTo(false));
+                .body("data.find { it.id == '" + TEST_USER_ID + "' }.status", equalTo(false));
     }
 
     // ── PUT /users/{id} ───────────────────────────────────────────────────────
@@ -247,8 +253,8 @@ class UserResourceTest {
                 .get("/users")
                 .then()
                 .statusCode(200)
-                .body("$", not(empty()))
-                .body("email", hasItem("juan@integration-test.com"));
+                .body("data", not(empty()))
+                .body("data.email", hasItem("juan@integration-test.com"));
     }
 
     @Test
@@ -259,12 +265,12 @@ class UserResourceTest {
                 .get("/users")
                 .then()
                 .statusCode(200)
-                .body("[0].id", notNullValue())
-                .body("[0].name", notNullValue())
-                .body("[0].lastName", notNullValue())
-                .body("[0].email", notNullValue())
-                .body("[0].role", notNullValue())
-                .body("[0].status", notNullValue());
+                .body("data[0].id", notNullValue())
+                .body("data[0].name", notNullValue())
+                .body("data[0].lastName", notNullValue())
+                .body("data[0].email", notNullValue())
+                .body("data[0].role", notNullValue())
+                .body("data[0].status", notNullValue());
     }
 
     // ── POST /users ───────────────────────────────────────────────────────────

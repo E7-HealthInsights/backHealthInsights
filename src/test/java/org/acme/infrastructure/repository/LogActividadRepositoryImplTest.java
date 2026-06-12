@@ -34,9 +34,9 @@ class LogActividadRepositoryImplTest {
     @Transactional
     void setUp() {
         em.createNativeQuery("DELETE FROM LogActividad").executeUpdate();
-        em.createNativeQuery("MERGE INTO Role (id, name) KEY(id) VALUES (1, 'ADMIN')").executeUpdate();
+        em.createNativeQuery("MERGE INTO Rol (id, nombre) KEY(id) VALUES (1, 'ADMIN')").executeUpdate();
         em.createNativeQuery(
-                "MERGE INTO Users (id, name, last_name, email, role_id, status, provider_id) KEY(id) VALUES " +
+                "MERGE INTO Usuario (id, nombre, apellido, correo, rol_id, estatus, proveedor_id) KEY(id) VALUES " +
                         "('00000000-0000-0000-0000-000000000001', 'Test', 'Admin', 'test@test.com', 1, true, 'test-firebase-uid')"
         ).executeUpdate();
     }

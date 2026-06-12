@@ -22,10 +22,10 @@ class RoleRepositoryImplTest {
     @BeforeEach
     @Transactional
     void setUp() {
-        em.createNativeQuery("MERGE INTO Role (id, name) KEY(id) VALUES (1, 'ADMIN')").executeUpdate();
-        em.createNativeQuery("MERGE INTO Role (id, name) KEY(id) VALUES (2, 'DIRECTOR_GENERAL')").executeUpdate();
-        em.createNativeQuery("MERGE INTO Role (id, name) KEY(id) VALUES (3, 'DIRECTOR_FINANZAS')").executeUpdate();
-        em.createNativeQuery("MERGE INTO Role (id, name) KEY(id) VALUES (4, 'DIRECTOR_MERCADOTECNIA')").executeUpdate();
+        em.createNativeQuery("MERGE INTO Rol (id, nombre) KEY(id) VALUES (1, 'ADMIN')").executeUpdate();
+        em.createNativeQuery("MERGE INTO Rol (id, nombre) KEY(id) VALUES (2, 'DIRECTOR_GENERAL')").executeUpdate();
+        em.createNativeQuery("MERGE INTO Rol (id, nombre) KEY(id) VALUES (3, 'DIRECTOR_FINANZAS')").executeUpdate();
+        em.createNativeQuery("MERGE INTO Rol (id, nombre) KEY(id) VALUES (4, 'DIRECTOR_MERCADOTECNIA')").executeUpdate();
     }
 
     @Test
