@@ -46,9 +46,22 @@ class AuthResourceTest {
     @BeforeEach
     @Transactional
     void setUp() {
-        RoleEntity admin = new RoleEntity();
-        admin.setName("ADMIN");
-        roleRepository.persist(admin);
+        // Elimina widgets que referencian al usuario seed para poder borrar el usuario sin FK error
+        userRepository.getEntityManager()
+                .createNativeQuery("DELETE FROM Widget WHERE usuario_id = :uid")
+                .setParameter("uid", AUTH_USER_ID.toString())
+                .executeUpdate();
+        // Elimina primero el usuario seed del import.sql (mismo UUID y correo) para evitar
+        // violación de PK/UNIQUE al hacer persist en este test.
+        userRepository.delete("id = ?1", AUTH_USER_ID);
+
+        // Reutiliza el rol ADMIN que ya existe en la BD (seeded por import.sql con id=1)
+        RoleEntity admin = roleRepository.findById((byte) 1);
+        if (admin == null) {
+            admin = new RoleEntity();
+            admin.setName("ADMIN");
+            roleRepository.persist(admin);
+        }
         adminRoleId = admin.getId();
 
         // Usuario que TestFirebaseAuthFilter inyecta como "autenticado"
@@ -66,10 +79,13 @@ class AuthResourceTest {
     @AfterEach
     @Transactional
     void tearDown() {
-        if (adminRoleId != null) {
-            userRepository.delete("role.id = ?1", adminRoleId);
-            roleRepository.deleteById(adminRoleId);
-        }
+        // Borra widgets antes de borrar el usuario para evitar FK error
+        userRepository.getEntityManager()
+                .createNativeQuery("DELETE FROM Widget WHERE usuario_id = :uid")
+                .setParameter("uid", AUTH_USER_ID.toString())
+                .executeUpdate();
+        // Solo eliminamos el usuario de prueba; el rol ADMIN (id=1) es del seed y no se toca
+        userRepository.delete("id = ?1", AUTH_USER_ID);
     }
 
     // ── GET /auth/me — respuesta exitosa ──────────────────────────────────────
